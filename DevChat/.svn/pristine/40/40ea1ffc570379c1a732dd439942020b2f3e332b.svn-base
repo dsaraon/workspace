@@ -1,0 +1,148 @@
+package server;
+import general.Account;
+import general.ChatMessage;
+import general.Message;
+
+import java.io.*;
+import java.net.*;
+import java.sql.SQLException;
+import java.util.*;
+
+
+public class Server {
+	
+	private ServerSocket serverSocket;
+	private Map<Integer, Connection> connections;
+	private Map<String, Integer> loggedIn; //maps usernames to sessionIDs
+	private Integer sessionIDCounter;
+	//database?
+	
+	public Server(int port) throws IOException {
+		serverSocket = new ServerSocket(port);
+		connections = new HashMap<Integer, Connection>();
+		loggedIn = new HashMap<String, Integer>();
+		//loggedIn.put("A", 1);
+		//loggedIn.put("B", 2);
+		sessionIDCounter = 1; 
+	}	
+	
+	
+	private synchronized void addConnection(int sessionID, Connection connection) {
+		connections.put(sessionID, connection);
+	}
+	
+	private synchronized String getUsername(int sessionID) {
+		Set<Map.Entry<String, Integer>> set = loggedIn.entrySet();
+		for (Map.Entry<String, Integer> entry : set) {
+			if (entry.getValue().equals(sessionID)) {
+				return entry.getKey();
+			}
+		}
+		return null;
+			
+	}
+	
+	protected synchronized void removeConnection(int sessionID) {
+		String username = getUsername(sessionID);
+		if (username != null) {
+			removeLoggedIn(username);
+		}
+		connections.remove(sessionID);
+	}
+	
+	protected synchronized void addLoggedIn(String username, int sessionID) {
+		loggedIn.put(username, sessionID);
+	}
+	
+	protected synchronized void removeLoggedIn(String username) {
+		loggedIn.remove(username);
+	}
+	
+	
+	public static void main(String [] args) {
+		Server server;
+		try {
+			server = new Server(Integer.parseInt(args[0]));
+			while(true) {
+				//once server has been created, listen continuously for connections
+				try {
+					Socket clientSocket = server.serverSocket.accept();
+					server.addConnection(server.sessionIDCounter, new Connection(server, clientSocket, server.sessionIDCounter));
+					server.sessionIDCounter++;
+				} catch (IOException e) {
+					System.out.println("unable to connect with socket");
+				}
+			}
+		} catch (IOException e) {
+			System.out.println("Unable to connect on port number " + args[0]); //or something along those lines
+		}
+	}
+	
+	
+	protected void sendPrivateMessage(ChatMessage chatMessage, int messageNO) throws Exception {
+		ArrayList<String> members = Methods.getChatMembers(chatMessage.getID());
+		for (String username : members) {
+			try {
+				if (loggedIn.containsKey(username)) {
+					int id = loggedIn.get(username);
+					Connection send = connections.get(id);
+					send.sendMessage(new Message(Message.Status.RECEIVE_MESSAGE, 0, messageNO, chatMessage));
+					//database sendPrivateMessage(chatMessage, true);
+				} else {
+					//database sendPrivateMessage(chatMessage, false);
+				}
+			} catch (Exception e) {
+				throw new Exception("message not sent to " + username);
+			}
+		}		
+	}
+	
+	/**
+	 * asks the database to create a new account
+	 * @param sessionID
+	 * @param account
+	 * @throws Exception if account cannot be created
+	 */
+	protected void createAccount(int sessionID, Account account) throws Exception {
+		String username = account.getUsername();
+		//database check that username isn't already taken then create account
+		boolean createAccount = true;
+		if (createAccount) {
+			addLoggedIn(username, sessionID);
+		} else {
+			throw new Exception("username already taken");
+		}
+	}
+	
+	/**
+	 * 
+	 * @param username
+	 * @return the account belonging to the username
+	 * @throws Exception
+	 */
+	protected static Account viewAccount(String username) throws Exception {
+		//Account account = database method
+		return new Account();
+	}
+	
+	/**
+	 * 
+	 * @return a set of users currently online
+	 */
+	protected synchronized Set<String> usersOnline()  {
+		return loggedIn.keySet();
+	}
+	
+	/**
+	 * 
+	 * @return a list of usernames for all accounts
+	 * @throws Exception
+	 */
+	public static Set<String> allUsers() throws Exception {
+		//set from database method
+		return new HashSet<String>();
+	}
+
+	
+	
+}

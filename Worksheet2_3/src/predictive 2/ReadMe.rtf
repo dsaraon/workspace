@@ -1,0 +1,52 @@
+{\rtf1\ansi\ansicpg1252\cocoartf1343\cocoasubrtf160
+{\fonttbl\f0\fswiss\fcharset0 Helvetica;}
+{\colortbl;\red255\green255\blue255;\red16\green19\blue26;}
+\paperw11900\paperh16840\margl1440\margr1440\vieww15200\viewh11200\viewkind0
+\pard\tx566\tx1133\tx1700\tx2267\tx2834\tx3401\tx3968\tx4535\tx5102\tx5669\tx6236\tx6803\pardirnatural
+
+\f0\fs24 \cf0 QUESTION 2 - 4\
+\
+Time efficiency : 	Sig2WordsProto		Sig2WordsList	         \
+\
+4663				1.294s				1.4000 and 0.783        \
+\
+4663 329 222		1.396s				1.275s		          \
+\
+\pard\pardeftab720\sl386
+
+\fs22 \cf2 \expnd0\expndtw0\kerning0
+\
+43 968 226 		4.440s and 3.966s		3.5s and 1.274s	\
+33247437 \
+8447 968 273 \
+2 256639 \
+436487\cf0 \kerning1\expnd0\expndtw0  \
+\
+So, The ListDictionary did turn out to be much faster than the prototype. 
+\fs24 \
+\pard\tx566\tx1133\tx1700\tx2267\tx2834\tx3401\tx3968\tx4535\tx5102\tx5669\tx6236\tx6803\pardirnatural
+\cf0 \
+\
+Note : I\'92ve used HashSet everywhere and HashMap since they seem to be faster and avoid duplicates.\
+\
+QUESTION 3 -  I used a HapMap since its efficiency in getting elements is linear time. \
+\
+The time efficiency of MapDictionary for \'934663\'94 is 1.375s. Which is a little slower than ListDictionary but I am assuming that it is much faster \
+with larger inputs since once the map is populated the retrieval is very fast. \
+\
+\
+QUESTION 4.\
+TREE DICTIONARY - \
+\
+The updated version returns the prefixes as well. \
+\
+\
+\pard\tx566\tx1133\tx1700\tx2267\tx2834\tx3401\tx3968\tx4535\tx5102\tx5669\tx6236\tx6803\pardirnatural
+\cf0 The time efficiency of TreeDictionary for \'934663\'94, with the prefixes is 3.283s on average. \
+\
+\
+\
+\
+\
+\
+}

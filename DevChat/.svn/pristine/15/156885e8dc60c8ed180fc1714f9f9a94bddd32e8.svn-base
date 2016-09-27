@@ -1,0 +1,107 @@
+package tests;
+
+import java.util.*;
+
+import client.*;
+
+public class TestObserver implements Observer {
+	
+	protected Runnable client;
+	protected Thread clientThread;
+	protected ArrayList<String> result;
+	protected ArrayList<Object> objects;
+	protected Map<Integer, TestObserver> chats;
+	
+	public TestObserver (Client client) {
+		this.client = client;
+		client.addObserver(this);
+		clientThread = new Thread(client);
+		clientThread.start();
+		result = new ArrayList<String>();
+		objects = new ArrayList<Object>();
+		chats = new HashMap<Integer, TestObserver>();
+	}
+	
+	public TestObserver (ChatWindow client) {
+		this.client = client;
+		client.addObserver(this);
+		clientThread = new Thread(client);
+		clientThread.start();
+		result = new ArrayList<String>();
+		objects = new ArrayList<Object>();
+	}
+	
+	public void stop() {
+		clientThread.interrupt();
+	}
+
+	@Override
+	public void update(Observable o, Object arg) {
+		GUIMessage message = (GUIMessage)arg;
+		if(message.getObject() != null) {
+			objects.add(message.getObject());
+		}
+		switch(message.getStatus()) {
+			case LOGGED_IN: result.add("logged in");
+			break;
+		case ACCOUNT_CREATED: result.add("account created");
+			break;
+		case ACCOUNT_CREATED_FAIL: result.add("account created fail");
+			break;
+		case ADD_MEMBER: result.add("add member");
+			break;
+		case ALL_PRIVATE_CHATS: result.add("all private chats");
+			break;
+		case ALL_TEAM_CHATS: result.add("all team chats");
+			break;
+		case ALL_USERS: result.add("all users");
+			break;
+		case DISPLAY_MESSAGE: result.add("display message");
+			break;
+		case ERROR: result.add("error");
+			break;
+		case HISTORY: result.add("history");
+			break;
+		case LEAVE_TEAM: result.add("leave team");
+			break;
+		case LOGIN_FAIL: result.add("login fail");
+			break;
+		case MAKE_TEAM: result.add("make team");
+			break;
+		case REMOVE_MEMBER: result.add("remove member");
+			break;
+		case START_PRIVATE_CHAT: result.add("start private chat");
+			break;
+		case USERS_ONLINE: result.add("users online");
+			break;
+		case VIEW_ACCOUNT: result.add("view account");
+			break;
+		default:
+			break;
+			
+		}
+		
+	}
+	
+	/**
+	 * 
+	 * @param elements any number of strings
+	 * @return true if all elements are in results in the same order
+	 */
+	public boolean contains(String ... elements) {
+		boolean output = true;
+		try {
+			if (elements.length != result.size()) {
+				return false;
+			}
+			for (int i = 0; i < elements.length; i++) {
+				if (!elements[i].equals(result.get(i))) {
+					output = false;
+				}
+			}
+			return output;
+		} catch (NullPointerException e) {
+			return false;
+		}
+	}
+}

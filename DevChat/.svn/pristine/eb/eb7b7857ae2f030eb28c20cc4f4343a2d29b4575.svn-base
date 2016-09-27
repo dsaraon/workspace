@@ -1,0 +1,28 @@
+package client;
+
+/**
+ * GUIMessage is the class used by the client to notify the observer of changes
+ *
+ */
+public class GUIMessage {
+	
+	private static enum Status {LOGGED_IN, LOGIN_FAIL, ACCOUNT_CREATED, ACCOUNT_CREATED_FAIL, VIEW_ACCOUNT, USERS_ONLINE,
+		ALL_USERS, START_PRIVATE_CHAT, MAKE_TEAM, ADD_MEMBER, REMOVE_MEMBER, DISPLAY_MESSAGE, HISTORY};
+	
+	private Status status;
+	private Object object;
+	
+	public GUIMessage(Status status, Object object) {
+		this.status = status;
+		this.object = object;
+	}
+	
+	public Status getStatus() {
+		return status;
+	}
+	
+	public Object getObject() {
+		return object;
+	}
+
+}

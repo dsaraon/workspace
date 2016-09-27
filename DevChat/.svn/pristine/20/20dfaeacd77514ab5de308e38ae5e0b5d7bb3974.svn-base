@@ -1,0 +1,50 @@
+package server;
+import general.Message;
+
+import java.io.EOFException;
+import java.io.IOException;
+import java.io.InterruptedIOException;
+import java.io.ObjectInputStream;
+
+
+public class Listener implements Runnable {
+	
+	private Connection connection;
+	private ObjectInputStream in;
+	private Protocol protocol;
+	
+	public Listener(Connection connection, Protocol protocol, ObjectInputStream in) {
+		this.connection = connection;
+		this.protocol = protocol;
+		this.in = in;
+	}
+	
+
+	@Override
+	public void run() {
+		boolean stop = false;;
+		while(!stop) {
+			try {
+				Message message = (Message)in.readObject();
+				if (message.getStatus() != Message.Status.SUCCESS && message.getStatus() != Message.Status.ERROR) {
+					Message response = protocol.processMessage(message);
+					connection.sendMessage(response);
+				}
+			} catch (ClassNotFoundException e) {
+				//this should never happen if the protocol is respected
+				e.printStackTrace();
+			} catch (EOFException | InterruptedIOException e) {
+				try {
+					in.close();
+					stop = true;
+				} catch (IOException e1) {
+					e1.printStackTrace();
+				}
+			}
+			catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+	}
+	
+}

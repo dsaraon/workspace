@@ -1,0 +1,10 @@
+package revision;
+
+public class DoublyLinkedList {
+	
+	public String name;
+	public String gender;
+	public int age;
+	
+	
+}

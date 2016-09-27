@@ -1,0 +1,61 @@
+package general;
+
+public class Chat {
+	
+	private int ID;
+	private String [] usernames;
+	private boolean team;
+	private String teamname;
+	private boolean delivered; //not totally sure what to do with this yet
+	
+	public Chat(int ID, String[] usernames, boolean team, boolean delivered) {
+		this.ID = ID;
+		this.usernames = usernames;
+		this.team = team;
+		this.delivered = delivered;
+	}
+	
+	public Chat(int ID, String[] usernames, boolean team, String teamname, boolean delivered) {
+		this.ID = ID;
+		this.usernames = usernames;
+		this.team = team;
+		this.teamname = teamname;
+		this.delivered = delivered;
+	}
+
+	public int getID() {
+		return ID;
+	}
+
+	public void setID(int iD) {
+		ID = iD;
+	}
+
+	public String[] getUsernames() {
+		return usernames;
+	}
+
+	public void setUsernames(String[] usernames) {
+		this.usernames = usernames;
+	}
+
+	public boolean isTeam() {
+		return team;
+	}
+	
+	public String getTeamname() {
+		return teamname;
+	}
+
+	public boolean isDelivered() {
+		return delivered;
+	}
+
+	public void setDelivered(boolean delivered) {
+		this.delivered = delivered;
+	}
+	
+	
+
+
+}

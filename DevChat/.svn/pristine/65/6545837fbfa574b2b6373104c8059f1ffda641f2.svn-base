@@ -1,0 +1,162 @@
+package database;
+
+import java.sql.SQLException;
+import java.util.*;
+
+import general.*;
+
+
+public interface Queries {
+	
+	/**
+	 * Checks if user has an account. Returns an error if username or password
+	 * are not found.
+	 * @param username Username of user
+	 * @param password Matching password
+	 * @exception if login details do not match
+	 */
+	void login(String username, String password) throws SQLException, Exception;
+	
+	/**
+	 * Checks if username chosen by new user is already taken
+	 * @param username Username to check
+	 * @return True if username is unused
+	 */
+	boolean usernameFree(String username) throws SQLException;
+	
+	
+	/**
+	 * Inserts a new account entry into the database
+	 * @param account User account
+	 */
+	void createAccount(Account account) throws SQLException;
+	
+	/**
+	 * Gets the account details (as an Account object) matching the username
+	 * @param username Username to search database
+	 * @return The populated account corresponding to username
+	 */
+	Account getAccount(String username) throws SQLException;
+	
+	/**
+	 * Gets a list of all users present in the database
+	 * @return List of all usernames
+	 */
+	ArrayList<String> allUsers() throws SQLException;
+	
+	/**
+	 * Adds record of private chat between users to database and creates
+	 * a populated Chat object with a new chat ID. If chat already exists 
+	 * in the database, the Chat object is given the existing ID.
+	 * @param username1 First user (alphabetically)
+	 * @param username2 Second user
+	 * @return Chat object containing chat details
+	 */
+	Chat createPrivateChat(String username1, String username2) throws SQLException;
+	
+	/**
+	 * Adds record of team chat between ArrayList of users to database and 
+	 * creates a populated Chat object with a new chat ID. 
+	 * @param teamName Chosen team name for group chat
+	 * @param usernames Users in chat
+	 * @return Chat object containing chat details
+	 * @throws Exception if team name already exists
+	 */
+	Chat createTeam(String teamName, ArrayList<String> usernames) throws SQLException, Exception;
+	
+	/**
+	 * Adds record of sent chat message to database under the assigned chat ID.
+	 * @param chatMessage Message to be recorded
+	 */
+	void savePrivateMessage(ChatMessage chatMessage) throws SQLException;
+	
+	/**
+	 * Adds record of sent chat message to database under the assigned chat ID.
+	 * @param chatMessage Message to be recorded
+	 */
+	void saveTeamMessage(ChatMessage chatMessage) throws SQLException;
+	
+	
+	/**
+	 * Gets list of all users listed in the database under the given private chat ID
+	 * @param chatID ID to search for
+	 * @return Usernames of the users participating in the chat
+	 */
+	ArrayList<String> chatMember(int chatID) throws SQLException;
+	
+	/**
+	 * Gets list of all users listed in the database under the given team chat ID
+	 * @param teamID ID to search for
+	 * @return Usernames of users in the team
+	 */
+	ArrayList<String> teamMembers(int teamID) throws SQLException;
+	
+	//SET DELIVERED - currently unused: would look to do this in future
+	
+	/**
+	 * Sets delivered boolean to true in database for the given user in
+	 * the matching chat ID
+	 * @param chatID ChatID of message
+	 * @param username Username to mark as delivered
+	 */
+	void setDeliveredPrivate(int chatID, String username) throws SQLException;
+	
+	/**
+	 * Sets delivered boolean to true in database for the given user in
+	 * the matching chat ID
+	 * @param chatID ChatID of message
+	 * @param username Username to mark as delivered
+	 */
+	void setDeliveredTeam(int teamID, String username) throws SQLException;
+	
+	//VIEW HISTORY - future improvement: get history in batches
+	
+	/**
+	 * Gets list of all chat messages matching the given private chat ID
+	 * @param chatID ID to search under
+	 * @return List of all messages associated with the private chat
+	 */
+	ArrayList<ChatMessage> getHistoryPrivate(int chatID) throws SQLException;
+	
+	/**
+	 * Gets list of all chat messages matching the given team ID
+	 * @param chatID ID to search under
+	 * @return a list of all messages associated with the team chat
+	 */
+	ArrayList<ChatMessage> getHistoryTeam(int teamID) throws SQLException;
+	
+	//ADD USER
+	
+	/**
+	 * adds a user to a group chat
+	 * @param username
+	 * @param teamID
+	 */
+	void addUser(String username, int teamID) throws SQLException;
+	
+	//REMOVE USER
+	/**
+	 * removes a user from a group chat
+	 * @param username
+	 * @param teamID
+	 * @return true if successful
+	 */
+	void removeUser(String username, int teamID) throws SQLException;
+	
+	//for when client logs back in
+	
+	/**
+	 * 
+	 * @param username
+	 * @return chats associated with the username
+	 */
+	ArrayList<Chat> getChats(String username) throws SQLException;
+	
+	/**
+	 * 
+	 * @param username
+	 * @return chats associated with the username
+	 */
+	ArrayList<Chat> getTeams(String username) throws SQLException;
+
+}

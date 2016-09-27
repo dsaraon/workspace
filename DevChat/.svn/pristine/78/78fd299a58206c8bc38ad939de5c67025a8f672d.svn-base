@@ -1,0 +1,100 @@
+package tests;
+
+import static org.junit.Assert.*;
+import general.Chat;
+import general.ChatMessage;
+import general.Message;
+
+import java.util.ArrayList;
+import java.util.concurrent.LinkedBlockingQueue;
+
+import org.junit.Before;
+import org.junit.Test;
+
+/* TODO: Can do tests on threadID's(first parameter in TestableChatWindow) by setting as 
+ * 			private field and setting value in constructor (rather than the current hard 
+ * 			coding to 0)
+ * TODO: Again ID in Chat could be made alterable but currently hard coded to 1
+ */
+public class ChatWindowTeamChatTests {
+
+		//Testnames => Given-When-Then
+		private TestableChatWindow testWindow;
+		private String username = "TEST USERNAME";
+		private ChatMessage chatMessage; // for methods receiving ChatMessage
+		private LinkedBlockingQueue<Message> out;
+		private Chat chat;
+		private ArrayList<String> usernames;
+		private String teamname;
+		private TestObserver testObserver;
+		
+		@Before
+		public void whenUsingATestableChatWindow(){
+			out = new LinkedBlockingQueue<Message>();
+			usernames = new ArrayList<String>();
+			teamname = "Bilbao";
+			chat = new Chat(1, usernames, teamname);
+			testWindow = new TestableChatWindow(0, username, chat, out);
+		}
+		
+		@Before
+		public void settingUpTestObserver() {
+			testObserver = new TestObserver(testWindow);
+		}
+		
+		@Test
+		public void respondToServer_recieveTeamMessage_GUIMessageDisplayMessage() {
+
+		}
+		
+		@Test
+		public void respondToServer_addTeamMember_GUIMessageAddMember() {
+
+		}
+		
+		@Test
+		public void respondToServer_removeTeamMember_GUIMessageRemoveMember() {
+
+		}
+	
+
+		@Test
+		public void getTeamHistory_success_GUIMessageHistory() {
+			
+		}
+
+		@Test
+		public void getTeamHistory_fail_GUIMessageError() {
+			
+		}
+
+		//no response to success for send team message
+
+		@Test
+		public void sendTeamMessage_fail_GUIMessageError() {
+			
+		}
+
+		@Test
+		public void addTeamMember_success_GUIMessageAddMember() {
+			testWindow.addTeamMember(username);
+			chat.getUsernames();
+			//assertTrue(testObserver.result.contains("add member"));
+			assertTrue(chat.getUsernames().contains(username));
+		}
+
+		@Test
+		public void addTeamMember_fail_GUIMessageError() {
+			
+		}
+		
+		@Test
+		public void removeTeamMember_success_GUIMessageRemoveMember() {
+			
+		}
+
+		@Test
+		public void removeTeamMember_fail_GUIMessageError() {
+			
+		}
+}

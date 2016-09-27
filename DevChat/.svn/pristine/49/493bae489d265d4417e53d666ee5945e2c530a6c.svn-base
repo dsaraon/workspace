@@ -1,0 +1,154 @@
+package client;
+
+import general.Account;
+
+import java.awt.event.WindowEvent;
+import java.awt.event.WindowListener;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Observable;
+import java.util.Observer;
+
+import javax.swing.JOptionPane;
+
+//This should be the main View class 
+//Initially singly-threaded
+
+public class View implements Observer{
+	
+	private Client client;
+	private Map<Integer, PrivateChatGUI> privateChatMap; 
+	private Map<Integer, TeamChatGUI> teamChatMap;
+	private LoginGUI loginGUI; 
+	private MainGUI mainGUI;
+	private String username;
+	private Thread clientThread;
+	private ArrayList<String> allUsers;
+	
+	/**
+	 * Constructor
+	 * @param client
+	 */
+	public View(Client client){
+		this.client = client;
+		client.addObserver(this);
+		clientThread = new Thread(client);
+		clientThread.start();
+		privateChatMap = new HashMap<Integer, PrivateChatGUI>();
+		teamChatMap = new HashMap<Integer, TeamChatGUI>();
+		loginGUI = new LoginGUI(client);
+		username = client.username;
+		allUsers = client.allUsers;
+	}
+
+	
+	@Override
+	public void update(Observable o, Object arg) {
+		
+		if (o instanceof Client) {
+			GUIMessage message = (GUIMessage)arg;
+			switch(message.getStatus()){
+			case LOGGED_IN:
+				username = (String)message.getObject();
+				mainGUI = new MainGUI(client);
+				break;
+			case ACCOUNT_CREATED:
+				mainGUI = new MainGUI(client);
+				loginGUI.reset();
+				break;
+			case MAKE_TEAM:
+				ChatWindow chatWindowTeam = (ChatWindow) message.getObject();
+				System.out.println("View " + allUsers);
+				TeamChatGUI teamChat = new TeamChatGUI(chatWindowTeam, username, client, allUsers);
+				Integer threadIDTeam = chatWindowTeam.getThreadID();
+				teamChatMap.put(threadIDTeam, teamChat);
+				break;
+			case START_PRIVATE_CHAT:
+				ChatWindow chatWindowPrivate = (ChatWindow) message.getObject();
+				PrivateChatGUI privateChat = new PrivateChatGUI(chatWindowPrivate, username);
+				Integer threadIDPrivate = chatWindowPrivate.getThreadID();
+				privateChatMap.put(threadIDPrivate, privateChat);
+				break;
+			case VIEW_ACCOUNT:
+				Account account = (Account) message.getObject();
+				boolean canChat = true;
+				if(account.getUsername().equals(username)){
+					canChat = false;
+				}
+				ViewProfileGUI viewProfile = new ViewProfileGUI(account, canChat, client);
+				break;
+			case LOGOUT:
+				privateChatMap.clear();
+				teamChatMap.clear();
+				loginGUI.setVisible(true);
+				break;
+			case LEAVE_TEAM:
+				Integer threadToRemove = (Integer)message.getObject();
+				teamChatMap.get(threadToRemove).dispose();
+				teamChatMap.remove(threadToRemove);
+				break;
+			case ALL_USERS:
+				allUsers = (ArrayList<String>) message.getObject();
+			default:
+				break;
+			}
+		}	
+	}
+
+	//main method to run the GUI
+	public static void main(String args[]){
+		
+		Client newClient = new Client(args[0], Integer.parseInt(args[1]));	
+		View viewMain = new View(newClient);
+	}
+
+	
+	//might not actually need this...
+	class Close implements WindowListener {
+		
+
+	@Override
+	public void windowOpened(WindowEvent e) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void windowClosing(WindowEvent e) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void windowClosed(WindowEvent e) {
+		clientThread.interrupt();
+		
+	}
+
+	@Override
+	public void windowIconified(WindowEvent e) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void windowDeiconified(WindowEvent e) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void windowActivated(WindowEvent e) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void windowDeactivated(WindowEvent e) {
+		// TODO Auto-generated method stub
+		
+	}
+	}
+		
+}

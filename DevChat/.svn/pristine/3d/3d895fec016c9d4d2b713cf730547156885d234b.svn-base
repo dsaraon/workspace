@@ -1,0 +1,42 @@
+Agenda and discussion points for meeting (Tuesday 10th March)Structure of Client--------------------	- Threads	----------		 => needs to be multi-threaded.		 => Client and GUI will be observable and runnable. GUI will have 		    the main and the client will have a run() class.		    		 => Main Client has a lot of field variables. 		 	- All threads have access too and write to the  queue			- Map of chat objects.			  		=> GUI needs to be threaded.			- Responses	------------		- Each ChatWindow has a queue for receiving messages.		- ISSUE: Don't know when you are getting a message back. ==> REQUEST CLASS		  The Request Class has one method response. 			  		 0 - Server 1 - Main Class i - Chat window.	
+	- Observable and Runnable	---------------------------		- Client updates GUI by notifying of observable.			- Protocol based around the GUI message class.		- Structure is designed to be scalable. 				Structure of GUI-----------------
+	- Define exactly the role of the GUI	----------------------------------------		- Harry has notes on this.	
+	- Running and communicating with the client and chat windows	-------------------------------------------------------------------
+		- View Class - need to run in thread and start a thread for a chat window.	 		- may need runnable WindowView class for chat windows.	 			- Set<Thread>	 			- new Thread(new WindowView(Object));		- Client		- Thread Client		- Threads
+	-----------		
+Issues which I need to think more about!
+	- Delivered/undelivered messages- retrieving undelivered messages
+	- Closing the system
+	- reconnecting to the system
+
+Errors/Verification
+	- Error messages- let's programme as though everything will always work and think
+	about this on Thursday
+	- Because of model view separation, the client must check that all information
+	entered is correct and inform the GUI if it isn't- but this comes under error messages
+
+
+Work to do:
+
+- GUI:
+	- sketched out design of the various frames/panels- where will the all
+	the methods be called from? How will the transitions work?
+		- Harry and Div. - above.- Client:
+	- implement method stubs		- Jess : Chat Window implementation.		- Anna : Methods.
+- Server/DB:
+	- update for new version of queries
+	- discuss team chats
+	- discuss errors
+	- (start testing)
+
+
+Provisional deadlines:
+
+- Thursday 12th:	- as much of the above as possible (we need enough time for it to all not work
+	and to fix it!)
+- Tuesday 17th:
+	- most, if not all of the programming
+- Thursday 19th
+	- all testing
+
+This leaves us with the weekend to write the report

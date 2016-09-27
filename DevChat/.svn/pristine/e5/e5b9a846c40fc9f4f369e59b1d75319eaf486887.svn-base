@@ -1,0 +1,80 @@
+package server;
+import general.Account;
+import general.ChatMessage;
+
+import java.util.*;
+
+
+/**
+ * This class contains stubs for methods which will need to be implemented somewhere on the server side
+ * All methods throw exceptions but these have not yet been specified
+ */
+public class Methods {
+		
+
+	
+	
+	
+	
+	
+	/**
+	 * starts a private chat
+	 * @param sessionID
+	 * @param username user with whom chat will be started
+	 * @return chatID
+	 * @throws Exception
+	 */
+	public static int startPrivateChat(int sessionID, String username) throws Exception {
+		/*
+		 * the method will need to check that the person is online and that a connection
+		 * can be made- the errors thrown will reflect this
+		 */
+		return 0;
+	}
+	
+	
+	/**
+	 * starts a group chat
+	 * @param sessionID
+	 * @param usernames users with whom chat should be started
+	 * @return teamID
+	 * @throws Exception
+	 */
+	public static int makeTeam(int sessionID, String [] usernames) throws Exception {
+		// errors thrown will reflect the different stages involved
+		return 0;
+	}
+	
+	public static void sendPrivateMessage(ChatMessage chatMessage) throws Exception {}
+	
+	public static void sendTeamMessage(ChatMessage chatMessage) throws Exception {}
+	
+	public static ArrayList<ChatMessage> viewPrivateHistory(int chatID) throws Exception {
+		return new ArrayList<ChatMessage>();
+	}
+	
+	public static ArrayList<ChatMessage> viewTeamHistory(int teamID) throws Exception {
+		return new ArrayList<ChatMessage>();
+	}
+	
+	public static void addUser(String username, int chatID) throws Exception {}
+	
+	public static void removeUser(String username, int chatID) throws Exception {}
+	
+	public static ArrayList<Integer> getChats(int sessionID) throws Exception{
+		return new ArrayList<Integer>();
+	}
+	
+	public static ArrayList<Integer> getTeams(int sessionID) throws Exception{
+		return new ArrayList<Integer>();
+	}
+	
+	public static ArrayList<String> getChatMembers(int chatID) throws Exception {
+		return new ArrayList<String>();
+	}
+	
+	public static ArrayList<String> getTeamMembers(int teamID) throws Exception {
+		return new ArrayList<String>();
+	}
+	
+}

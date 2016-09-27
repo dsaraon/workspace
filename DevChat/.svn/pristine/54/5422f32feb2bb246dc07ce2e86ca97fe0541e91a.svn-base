@@ -1,0 +1,168 @@
+package database;
+
+import java.util.*;
+
+import general.*;
+
+
+interface Queries {
+	
+	
+	//LOGIN
+	/**
+	 * @param username
+	 * @param password
+	 * @return userID or -1 if unsuccessful
+	 */
+	int login(String username, String password);
+	
+	//CREATE ACCOUNT
+	
+	/**
+	 * @param username
+	 * @return true if username is not already in the database
+	 */
+	boolean usernameFree(String username);
+	
+	
+	/**
+	 * inserts a new account entry into the database
+	 * @param account
+	 * @return true if successful
+	 */
+	boolean createAccount(Account account);
+	
+	//VIEW ACCOUNT
+	
+	/**
+	 * @param username
+	 * @return the details of the account corresponding to username
+	 */
+	Account getAccount(String username);
+	
+	//USERS ONLINE
+	
+	//ALL USERS
+	
+	/**
+	 * @return a list of all usernames stored in the database
+	 */
+	ArrayList<String> allUsers();
+	
+	//START PRIVATE CHAT
+	
+	/**
+	 * inserts a new private chat entry into the database
+	 * @param username1
+	 * @param username2
+	 * @return chatID or -1 if unsuccessful
+	 */
+	int createPrivateChat(String username1, String username2);
+	
+	//START GROUP CHAT
+	
+	/**
+	 * inserts a new group chat entry into the database
+	 * @param usernames
+	 * @return teamID or -1 if unsuccessful
+	 */
+	int createTeam(String... usernames);
+	
+	//SEND MESSAGE
+	
+	/**
+	 * inserts a new private chat message entry into the database
+	 * @param chatMessage
+	 * @param delivered
+	 * @return true if successful
+	 */
+	boolean savePrivateMessage(ChatMessage chatMessage, boolean delivered);
+	
+	/**
+	 * inserts a new group chat message entry into the database
+	 * @param chatMessage
+	 * @param delivered - key user IDs
+	 * @return true if successful
+	 */
+	boolean saveGroupMessage(ChatMessage chatMessage, Map<Integer, Boolean> delivered);
+	
+	/**
+	 * 
+	 * @param chatID
+	 * @return the IDs of the user participating in the chat
+	 */
+	int[] chatMember(int chatID);
+	
+	/**
+	 * 
+	 * @param teamID
+	 * @return the IDs of users in the team
+	 */
+	int[] teamMembers(int teamID);
+	
+	/**
+	 * 
+	 * @param chatID
+	 * @param userID
+	 * @return true if successful
+	 */
+	boolean setDeliveredPrivate(int chatID, int userID);
+	
+	/**
+	 * 
+	 * @param teamID
+	 * @param userID
+	 * @return true if successful
+	 */
+	boolean setDeliveredTeam(int teamID, int userID);
+	
+	//VIEW HISTORY
+	
+	/**
+	 * @param chatID
+	 * @return a list of all messages associated with the chat id
+	 */
+	ArrayList<ChatMessage> getHistoryPrivate(int chatID);
+	
+	/**
+	 * @param chatID
+	 * @return a list of all messages associated with the team id
+	 */
+	ArrayList<ChatMessage> getHistoryTeam(int teamID);
+	
+	//ADD USER
+	
+	/**
+	 * adds a user to a group chat
+	 * @param username
+	 * @param chatID
+	 * @return true if successful
+	 */
+	boolean addUser(String username, int chatID);
+	
+	//REMOVE USER
+	/**
+	 * removes a user from a group chat
+	 * @param username
+	 * @param chatID
+	 * @return true if successful
+	 */
+	boolean removeUser(String username, int chatID);
+	
+	//for when client logs back in
+	
+	/**
+	 * 
+	 * @param username
+	 * @return chatIDs associated with the username
+	 */
+	int [] getChats(String username);
+	
+	/**
+	 * 
+	 * @param username
+	 * @return teamIDs associated with the username
+	 */
+	int [] getTeams(String username);
+
+}

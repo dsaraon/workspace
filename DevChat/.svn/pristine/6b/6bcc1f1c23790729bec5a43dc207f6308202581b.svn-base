@@ -1,0 +1,165 @@
+package client;
+
+import general.Chat;
+import general.ChatMessage;
+import general.Message;
+
+import java.util.*;
+import java.util.concurrent.LinkedBlockingQueue;
+
+/**
+ * this class can be used for both private and team chats; however, the gui will be different
+ * and will ensure that only the relevant methods can be called
+ *
+ */
+public class ChatWindow extends Observable implements Runnable {
+	
+	//hi
+	
+	private int threadID;
+	private String username;
+	private Chat chat; //id number and participants
+	private LinkedBlockingQueue<Message> in; //incoming queue
+	private LinkedBlockingQueue<Message> out; //the client's queue
+	private Map<Integer, Request> requests;
+	private Integer messageCounter; //object version of int for synchronisation
+	private boolean stop;
+	
+	public ChatWindow (int threadID, String username, Chat chat, LinkedBlockingQueue<Message> out) {
+		this.threadID = threadID;
+		this.username = username;
+		this.chat = chat;
+		in = new LinkedBlockingQueue<Message>();
+		this.out = out;
+		requests = new HashMap<Integer, Request>();
+		messageCounter = 0;
+		stop = false;
+		if (chat.isTeam()) {
+			getTeamHistory();
+		} else {
+			getPrivateHistory(); //the result will be passed to the observer
+		}
+	}
+	
+	/**
+	 * responds continuously to messages redirected to this thread by the main client
+	 */
+	public void run() {
+		while(!stop) {
+			try {
+				Message message = in.take();
+				if (message.getThreadID() == 0) {
+					respondToServer(message);
+				} else {
+					int messageID = message.getMessageID();
+					requests.get(messageID).respond(message);
+					requests.remove(messageID);
+				}
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+		}
+		
+	}
+	
+	/**
+	 * responds to communication initiated by the server (see protocol)
+	 * @param message
+	 */
+	private void respondToServer(Message message) {
+		if (message.getStatus() == Message.Status.RECEIVE_PRIVATE_MESSAGE) {
+			//implementation
+		} else if (message.getStatus() == Message.Status.RECEIVE_TEAM_MESSAGE) {
+			//implementation
+		} else if (message.getStatus() == Message.Status.ADD_TEAM_MEMBER) {
+			//implementation
+		} else if (message.getStatus() == Message.Status.REMOVE_TEAM_MEMBER) {
+			//implementation
+		}
+	}
+	
+	public synchronized void receiveMessage(Message message) throws InterruptedException {
+		in.put(message);
+	}
+
+	private synchronized int incrementMessageID() {
+		return messageCounter++;
+	}
+	
+	
+	//METHODS CALLED BY THE CONSTRUCTOR
+	/**
+	 * requests private chat history from the server and creates response action to send history to observer
+	 */
+	public void getPrivateHistory() {
+		//implementation
+	}
+	
+	/**
+	 * requests team chat history from the server and creates response action to send history to observer
+	 */
+	public void getTeamHistory() {
+		//implementation
+	}
+	
+	//METHODS CALLED BY THE GUI- these all send requests to the server so need to create request objects to handle the responses
+	
+	public void sendPrivateMessage(ChatMessage chatMessage) {
+		int messageID = incrementMessageID();
+		out.add(new Message(Message.Status.SEND_PRIVATE_MESSAGE, threadID, messageID, chatMessage));
+		class SendPrivateMessageRequest extends Request {
+			@Override
+			void respond(Message message) {
+				if (message.getStatus() == Message.Status.SUCCESS) {
+					//implementation
+				} else if (message.getStatus() == Message.Status.ERROR) {
+					//implementation
+				}
+			}
+		}
+		requests.put(messageID, new SendPrivateMessageRequest());
+	}
+	
+	public void sendTeamMessage(ChatMessage chatMessage) {
+		int messageID = incrementMessageID();
+		out.add(new Message(Message.Status.SEND_TEAM_MESSAGE, threadID, messageID, chatMessage));
+		class SendTeamMessageRequest extends Request {
+			@Override
+			void respond(Message message) {
+				if (message.getStatus() == Message.Status.SUCCESS) {
+					//implementation
+				} else if (message.getStatus() == Message.Status.ERROR) {
+					//implementation
+				}
+			}
+		}
+		requests.put(messageID, new SendTeamMessageRequest());
+	}
+	
+	/**
+	 * adds a member to the team
+	 * @param username
+	 */
+	public void addTeamMember(String username) {
+		//implementation
+	}
+	
+	/**
+	 * removes a member from the team
+	 * @param username
+	 */
+	public void removeTeamMember(String username) {
+		//implementation
+	}
+	
+	//leave this for now- I don't know how exactly 
+	public void close() {
+		//implementation
+	}
+	
+	
+	
+	
+}

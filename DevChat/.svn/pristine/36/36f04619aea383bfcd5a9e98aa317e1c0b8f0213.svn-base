@@ -1,0 +1,11 @@
+//THIS CLASS IS NOT COMPLETE!
+public class Account {
+	
+	//needs field variables!!
+	
+	public Account() {};
+	
+	public String getUsername() {
+		return new String();
+	}
+}

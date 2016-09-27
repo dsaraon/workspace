@@ -1,0 +1,130 @@
+---------------------------------------------------------------------------------------------
+                                    ***** Protocol *****   edited 03/03/2015
+---------------------------------------------------------------------------------------------
+
+The protocol is based around the client and server sending instances of a Message class
+between them. An object of type Message has the following field variables:
+	- a status
+	- a thread and message id
+	- an array of objects
+
+The status has been implemented as an enumeration so that the finite number of statuses
+available is enforced not only by the protocol but also by the Java compiler (reducing the
+chances of bugs due to naming inconsistencies). The contents of the array is determined by
+the message status. The message types required by the protocol are listed below. The server
+responses shown are always positive. In the case of an error, a message with the status
+ERROR and objects[0] as a string detailing the error type will be returned. These strings
+will be confirmed when the design of the server and database is better known. The thread and
+message id are never used by the server; they are sent back to the client for identifying
+responses.
+
+---------------------------------------------------------------------------------------------
+Communication initiated by the client:
+---------------------------------------------------------------------------------------------
+
+* Client >>> LOGIN 
+	- objects[0]: String {username}
+	- objects[1]: String {password}
+* Server >>> SUCCESS
+	- objects : none
+
+---------------------------------------------------------------------------------------------
+
+* Client >>> CREATE_ACCOUNT
+	- objects[0]: Account {new account details}
+	- CLIENT RESPONSIBILITIES: the account details should be complete and valid
+* Server >>> SUCCESS
+	- objects : none
+
+---------------------------------------------------------------------------------------------
+
+* Client >>> VIEW_ACCOUNT
+	- objects[0]: String {username}
+	- CLIENT RESPONSIBILITIES: the username exists
+* Server >>> SUCCESS
+	- objects[0]: Account {requested account}
+
+---------------------------------------------------------------------------------------------
+
+* Client >>> USERS_ONLINE
+	- objects : none
+* Server >>> SUCCESS
+	- objects[0]: ArrayList<String> {usernames currently connected to server}
+
+---------------------------------------------------------------------------------------------
+
+* Client >>> ALL_USERS 
+	- objects : none
+* Server >>> SUCCESS
+	- objects[0]: ArrayList<String> {all usernames}
+
+---------------------------------------------------------------------------------------------
+
+* Client >>> START_PRIVATE_CHAT
+	- objects[0]: String {username of recipient}
+* Server >>> SUCCESS
+	- objects[0]: int {sessionID of recipient}
+
+---------------------------------------------------------------------------------------------
+
+* Client >>> START_GROUP_CHAT
+	- objects[i]: String {username of recipient i}
+* Server >>> SUCCESS
+	- objects[0]: Map<String, Integer> {usernames which were added to the chat}
+
+---------------------------------------------------------------------------------------------
+
+* Client >>> VIEW_HISTORY
+	***** tbc *****
+
+---------------------------------------------------------------------------------------------
+
+* Client >>> SEND_MESSAGE
+	- objects[i]: ChatMessage {chat message being sent}
+* Server >>> SUCCESS
+	- objects : none
+
+---------------------------------------------------------------------------------------------
+
+* Client >>> ADD_USER
+	- objects[i]: String username
+* Server >>> SUCCESS
+	- objects : none
+	
+---------------------------------------------------------------------------------------------
+
+* Client >>> REMOVE_USER
+	- objects[i]: String username
+* Server >>> SUCCESS
+	- objects : none
+
+---------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------
+Communication initiated by the server:
+---------------------------------------------------------------------------------------------
+
+* Server >>> GET_USERNAME
+	- objects : none
+* Client >>> SUCCESS
+	- objects[0]: String {username}
+
+---------------------------------------------------------------------------------------------
+
+* Server >>> JOIN_CHAT
+	- objects[0]: Chat {details of chat}
+* Client >>> SUCCESS
+	- objects : none
+
+---------------------------------------------------------------------------------------------
+
+* Server >>> RECEIVE_MESSAGE
+	- objects[0]: ChatMessage {the message sent}
+* Client >>> SUCCESS
+	- objects : none
+
+---------------------------------------------------------------------------------------------
+
+... Some form of communication for notifying other users that someone has left a chat/
+disconnected from the client but depends on design decisions...
+
+---------------------------------------------------------------------------------------------

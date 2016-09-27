@@ -1,0 +1,219 @@
+package client;
+
+import general.Chat;
+import general.ChatMessage;
+import general.Message;
+
+import java.util.*;
+import java.util.concurrent.LinkedBlockingQueue;
+
+/** This class can be used for both private and team chats; however, the 
+ *  GUI will be different and will ensure that only the relevant methods 
+ *  can be called
+ */
+public class ChatWindow extends Observable implements ChatWindowGUIProtocol {
+
+	private int threadID;
+	private String username;
+	private Chat chat; //id number and participants
+	protected LinkedBlockingQueue<Message> in; //incoming queue
+	protected LinkedBlockingQueue<Message> out; //the client's queue
+	private Map<Integer, Request> requests;
+	private Integer messageCounter; //object version of int for synchronisation
+	protected boolean stop;
+	private Client client;
+	
+	public ChatWindow (int threadID, String username, Chat chat, 
+						LinkedBlockingQueue<Message> out, Client client) {
+		this.threadID = threadID;
+		this.username = username;
+		this.chat = chat;
+		in = new LinkedBlockingQueue<Message>();
+		this.out = out;
+		requests = new HashMap<Integer, Request>();
+		messageCounter = 0;
+		stop = false;
+		this.client = client;
+		if (chat.isTeam()) {
+			getTeamHistory();
+		} else {
+			getPrivateHistory(); //the result will be passed to the observer
+		}
+	}
+	
+
+	/** responds continuously to messages redirected to this thread by the main client */
+	public int getThreadID() {
+		return threadID;
+	}
+	
+	public Chat getChat(){
+		return chat;
+	}
+
+	public String getUsername(){
+		return username;
+	}
+	
+	/** responds continuously to messages redirected to this thread by the main client
+	 */
+	public void run() {
+		while(!stop) {
+			try {
+				receive();
+			} catch (InterruptedException e) {
+				stop = true;
+				client.removeCurrentChat(threadID);
+			}
+		}
+	}
+
+	protected void receive() throws InterruptedException {
+		Message message = in.take();
+		if (message.getThreadID() == 0) {
+			respondToServer(message);
+		} else {
+			int messageID = message.getMessageID();
+			requests.get(messageID).respond(message);
+			requests.remove(messageID);
+		}
+	}
+	
+	private void updateGUI(GUIMessage.Status status, Object object) {
+		System.out.println("update GUI");
+		setChanged();
+		notifyObservers(new GUIMessage(status, object));
+	}
+	
+	/** responds to communication initiated by the server (see protocol)
+	 * @param message */
+	protected void respondToServer(Message message) {
+		System.out.println("respond to Server");
+		if (message.getStatus() == Message.Status.RECEIVE_PRIVATE_MESSAGE) {
+			System.out.println("Recieve private message");
+			updateGUI(GUIMessage.Status.DISPLAY_MESSAGE, message.getObjects()[0]);
+		} else if (message.getStatus() == Message.Status.RECEIVE_TEAM_MESSAGE) {
+			updateGUI(GUIMessage.Status.DISPLAY_MESSAGE, message.getObjects()[0]);
+		} else if (message.getStatus() == Message.Status.ADD_TEAM_MEMBER) {
+			chat.addUsername(username);			
+			updateGUI(GUIMessage.Status.ADD_MEMBER, message.getObjects()[1]);
+		} else if (message.getStatus() == Message.Status.REMOVE_TEAM_MEMBER) {
+			chat.removeUsername(username);
+			updateGUI(GUIMessage.Status.REMOVE_MEMBER, message.getObjects()[1]);
+		}
+	}
+	
+	public synchronized void receiveMessage(Message message) throws InterruptedException {
+		in.put(message);
+	}
+
+	private synchronized int incrementMessageID() {
+		return messageCounter++;
+	}
+
+	//METHODS CALLED BY THE CONSTRUCTOR
+	/** requests private chat history from the server and creates 
+	 *  response action to send history to observer */
+	public void getPrivateHistory() {
+		int messageID = incrementMessageID();
+		out.add(new Message(Message.Status.VIEW_PRIVATE_HISTORY, threadID, messageID, chat.getID()));
+		class ViewPrivateHistoryRequest extends Request {
+			@Override
+			void respond(Message message) {
+				if (message.getStatus() == Message.Status.SUCCESS) {
+					updateGUI(GUIMessage.Status.HISTORY, message.getObjects()[0]);					
+				} else if (message.getStatus() == Message.Status.ERROR) {
+					updateGUI(GUIMessage.Status.ERROR, "Error retrieving private history.");					
+				}
+			}
+		}
+		requests.put(messageID, new ViewPrivateHistoryRequest());
+	}
+	
+	/** requests team chat history from the server and creates response action to send 
+	 * history to observer */
+	public void getTeamHistory() {
+		int messageID = incrementMessageID();
+		out.add(new Message(Message.Status.VIEW_TEAM_HISTORY, threadID, messageID, chat.getID()));
+		class ViewTeamHistoryRequest extends Request {
+			@Override
+			void respond(Message message) {
+				if (message.getStatus() == Message.Status.SUCCESS) {
+					updateGUI(GUIMessage.Status.HISTORY, message.getObjects()[0]);										
+				} else if (message.getStatus() == Message.Status.ERROR) {
+					updateGUI(GUIMessage.Status.ERROR, "Error retrieving team history.");
+				}
+			}
+		}
+		requests.put(messageID, new ViewTeamHistoryRequest());
+	}
+	
+	// METHODS CALLED BY THE GUI
+	/** @param chatMessage */
+	public void sendPrivateMessage(ChatMessage chatMessage) {
+		int messageID = incrementMessageID();
+		out.add(new Message(Message.Status.SEND_PRIVATE_MESSAGE, threadID, messageID, chatMessage));
+		class SendPrivateMessageRequest extends Request {
+			@Override
+			void respond(Message message) {
+				if (message.getStatus() == Message.Status.ERROR) {
+					updateGUI(GUIMessage.Status.ERROR, "Error sending private message. Please try again.");
+				}
+			}
+		}
+		requests.put(messageID, new SendPrivateMessageRequest());
+	}
+	
+	/** @param chatMessage */
+	public void sendTeamMessage(ChatMessage chatMessage) {
+		int messageID = incrementMessageID();
+		out.add(new Message(Message.Status.SEND_TEAM_MESSAGE, threadID, messageID, chatMessage));
+		class SendTeamMessageRequest extends Request {
+			@Override
+			void respond(Message message) {
+				if (message.getStatus() == Message.Status.ERROR) {
+					updateGUI(GUIMessage.Status.ERROR,"Error sending message to team. Please try again");
+				}
+			}
+		}
+		requests.put(messageID, new SendTeamMessageRequest());
+	}
+	
+	/** adds a member to the team
+	 *  @param username*/
+	public void addTeamMember(String username) {
+		int messageID = incrementMessageID();
+		out.add(new Message(Message.Status.ADD_USER, threadID, messageID, username, chat));
+		class AddUserRequest extends Request {
+			@Override
+			void respond(Message message) {
+				if (message.getStatus() == Message.Status.SUCCESS) {
+					//chat.addUsername(username);
+					updateGUI(GUIMessage.Status.ADD_MEMBER,username);				
+				} else if (message.getStatus() == Message.Status.ERROR) {
+					updateGUI(GUIMessage.Status.ERROR, "Error adding user. Please try again" );				
+				}
+			}
+		}
+		requests.put(messageID, new AddUserRequest());
+	}
+	
+	/** removes a member from the team
+	 * @param username */
+	public void removeTeamMember(String username) {
+		int messageID = incrementMessageID();
+		out.add(new Message(Message.Status.REMOVE_USER, threadID, messageID, username, chat.getID()));
+		class RemoveUserRequest extends Request {
+			@Override
+			void respond(Message message) {
+				if (message.getStatus() == Message.Status.SUCCESS) {
+					//chat.removeUsername(username);					
+					updateGUI(GUIMessage.Status.REMOVE_MEMBER, username);									
+				} else if (message.getStatus() == Message.Status.ERROR) {
+					updateGUI(GUIMessage.Status.ERROR, "Error removing user. Please try again.");									
+				}
+			}
+		}
+		requests.put(messageID, new RemoveUserRequest());
+	}
+}

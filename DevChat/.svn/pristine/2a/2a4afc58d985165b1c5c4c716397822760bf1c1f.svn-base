@@ -1,0 +1,187 @@
+package server;
+
+import general.Account;
+import general.Chat;
+import general.ChatMessage;
+
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Map;
+
+import database.Queries;
+
+//write stubs for testing
+public class TestDatabase implements Queries {
+
+	@Override
+	public void login(String username, String password) throws Exception {
+		if (!((username.equals("firstname") || username.equals("firstname1")) && password.equals("password"))) {
+			throw new Exception();
+		}
+	}
+
+	@Override
+	public boolean usernameFree(String username) {
+		if (username.equals("username") || username.equals("another username")) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+
+	@Override
+	public void createAccount(Account account) throws Exception {
+		if (!account.getUsername().equals("username")) {
+			throw new Exception();
+		}
+	}
+
+	@Override
+	public Account getAccount(String username) throws Exception {
+		if (username.equals("a")) {
+			return new Account("a","b","c");
+		} else {
+			throw new Exception();
+		}
+	}
+
+	@Override
+	public ArrayList<String> allUsers() {
+		return new ArrayList<String>();
+	}
+
+	@Override
+	public Chat createPrivateChat(String username1, String username2)
+			throws SQLException, Exception {
+		if (username1.equals("firstname") && username2.equals("username")) {
+			return new Chat(0, null, false);
+		} else {
+			throw new Exception();
+		}
+	}
+
+	@Override
+	public Chat createTeam(String teamName, String... usernames)
+			throws SQLException, Exception {
+		if (teamName.equals("teamname")) {
+			return new Chat(0, null, false);
+		} else {
+			throw new Exception();
+		}
+	}
+
+	@Override
+	public void savePrivateMessage(ChatMessage chatMessage)
+			throws SQLException, Exception {
+		if(!(chatMessage.getID() == 1)) {
+			throw new Exception();
+		}
+		
+	}
+
+	@Override
+	public void saveTeamMessage(ChatMessage chatMessage) throws SQLException,
+			Exception {
+		if(!(chatMessage.getID() == 1)) {
+			throw new Exception();
+		}
+		
+	}
+
+	@Override
+	public ArrayList<String> chatMember(int chatID) throws SQLException,
+			Exception {
+		if (chatID == 1 || chatID == 2) {
+			ArrayList<String> a = new ArrayList<String>();
+			a.add("firstname");
+			return a;
+		} else {
+			throw new Exception();
+		}
+	}
+
+	@Override
+	public ArrayList<String> teamMembers(int teamID) throws SQLException,
+			Exception {
+		if (teamID == 1 || teamID == 2) {
+			ArrayList<String> a = new ArrayList<String>();
+			a.add("firstname");
+			return a;
+		} else {
+			throw new Exception();
+		}
+	}
+
+	@Override
+	public void setDeliveredPrivate(int chatID, String username)
+			throws SQLException, Exception {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void setDeliveredTeam(int teamID, String username)
+			throws SQLException, Exception {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public ArrayList<ChatMessage> getHistoryPrivate(int chatID)
+			throws SQLException, Exception {
+		if (chatID == 1) {
+			return new ArrayList<ChatMessage>();
+		} else {
+			throw new Exception();
+		}
+	}
+
+	@Override
+	public ArrayList<ChatMessage> getHistoryTeam(int teamID)
+			throws SQLException, Exception {
+		if (teamID == 1) {
+			return new ArrayList<ChatMessage>();
+		} else {
+			throw new Exception();
+		}
+	}
+
+	@Override
+	public void addUser(String username, int teamID) throws SQLException,
+			Exception {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void removeUser(String username, int teamID) throws SQLException,
+			Exception {
+		if (!(teamID == 1)) {
+			throw new Exception();
+		}
+		
+	}
+
+	@Override
+	public ArrayList<Chat> getChats(String username) throws SQLException,
+			Exception {
+		if (username.equals("firstname")) {
+			return new ArrayList<Chat>();
+		} else {
+			throw new Exception();
+		}
+	}
+
+	@Override
+	public ArrayList<Chat> getTeams(String username) throws SQLException,
+			Exception {
+		if (username.equals("firstname")) {
+			return new ArrayList<Chat>();
+		} else {
+			throw new Exception();
+		}
+	}
+
+
+
+}

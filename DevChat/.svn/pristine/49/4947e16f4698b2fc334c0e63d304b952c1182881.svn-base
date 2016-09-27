@@ -1,0 +1,70 @@
+---------------------------------------------------------------------------------------------
+                                 ***** Design Issues *****  28/02/2015       
+---------------------------------------------------------------------------------------------
+
+While developing the protocol, the issue of threads in the client arose. Although this does
+not affect the design of the protocol and server, it seems worthwhile to include a brief
+record of the discussion here, for future reference.
+	- The client should have a thread devoted to listening for messages from the server,
+	  since this will need to happen continuously.
+	- Depending on the design of the client, it might also make sense to use a new
+	  thread for each chat conversation, so that the performance of one does not affect
+	  the performance of another.
+
+Additionally there are two key questions about the design which *do* need to be addressed in
+order to finalise the protocol, but for which there is not an immediately obvious answer.
+Ideally, we should have an answer to these questions by the end of the Tuesday meeting.
+
+
+Question 1:
+-----------
+
+How are chats displayed? In a style similar to MSN or facebook, where new chat windows are 
+opened when a chat is begun, and can be closed at any point, or in a style similar to
+WhatsApp or iMessage, where all previous chats are shown in a menu and are always present
+once they have been begun?
+
+In the case of the former, we would also need to
+decide what should happen in a private chat when one user is still connected to the client,
+but closes their chat window (note 1). Should the response by symmetric, i.e. the other
+user's chat window closes also, or asymmetric? If it is assymetric, what should happen if the
+other user, whose window is still open) tries to send another message? Presumably the closed
+window should reopen, or is there another approach?
+
+
+Question 2:
+-----------
+
+How will chat history be retreived? What search parameters will be required, e.g. chat 
+members, date, private/group? The answer to this is determined by the functionality of the
+client, but will affect both the design of the database and the messages the server must
+receive and process.
+
+From Sam and Jess' meeting:
+
+Question 3:
+-----------
+How will the group chat be laid out? We figure a chat room layout may be more practical as
+otherwise when each person is added to a conversation, a window would be opened, meaning larger
+groups would have unnecessary windows being opened during the set up.
+
+Question 4
+----------
+What will our protocols be for when a persons connection drops out? We have discussed this and
+have suggested if the connection drops out for short period and the other persons message cannot
+be sent, we should throw an error and give them the chance of re-sending - "try again y/n?".
+However, a re-establishing connection protocol should be written as we need something in server 
+to check if users are still online (this will also help with making a list of users that are available).
+
+Question 5
+-----------
+How should the profiles be displayed / accessed? I.e. separate screen, hover over to get box or right 
+click to get profile?
+
+
+--------------------------------------------------------------------------------------------
+* note 1: This shouldn't be an issue for group chats since they can't be resumed. Once there
+	   is only one user left in the chat, it can no longer be, by our definition, a
+	   group chat and therefore should end for the one remaining user.
+	   
+	   

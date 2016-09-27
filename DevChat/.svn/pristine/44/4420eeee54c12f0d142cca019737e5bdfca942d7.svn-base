@@ -1,0 +1,101 @@
+package client;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Observable;
+import java.util.Observer;
+
+//This should be the main View class 
+//Initially singly-threaded
+
+public class View implements Observer{
+	
+	private Client client;
+	private Map<Integer, PrivateChatGUI> privateChatMap; 
+	private Map<Integer, TeamChatGUI> teamChatMap;
+	private LoginGUI loginGUI; 
+	private MainGUI mainGUI;
+	private String username;
+	
+	/**
+	 * Constructor
+	 * @param client
+	 */
+	public View(Client client){
+		this.client = client;
+		//addObserver
+		client.addObserver(this);
+		//run client thread here
+		Thread clientThread = new Thread(client);
+		clientThread.start();
+		privateChatMap = new HashMap<Integer, PrivateChatGUI>();
+		teamChatMap = new HashMap<Integer, TeamChatGUI>();
+		loginGUI = new LoginGUI(client);
+		username = new String();
+	}
+	//second constructor with chatWindow
+	
+	@Override
+	public void update(Observable o, Object arg) {
+		
+		if (o instanceof Client) {
+			GUIMessage message = (GUIMessage)arg;
+			switch(message.getStatus()){
+			case LOGGED_IN:
+				username = (String)message.getObject();
+				//launch main GUI
+				mainGUI = new MainGUI(client);//see how "username" may be used to populate this GUI
+				break;
+			case ACCOUNT_CREATED:
+				mainGUI = new MainGUI(client);//how to customize this for current user?
+				loginGUI.reset();
+				break;
+			case ADD_MEMBER:
+				break;
+			case ALL_PRIVATE_CHATS:
+				break;
+			case ALL_TEAM_CHATS:
+				break;
+			case ALL_USERS:
+				break;
+			case DISPLAY_MESSAGE:
+				
+				break;
+			case ERROR:
+				break;
+			case LEAVE_TEAM:
+				break;
+			case MAKE_TEAM:
+				ChatWindow chatWindowTeam = (ChatWindow) message.getObject();
+				TeamChatGUI teamChat = new TeamChatGUI(chatWindowTeam, username);
+				Integer threadIDTeam = chatWindowTeam.getThreadID();
+				teamChatMap.put(threadIDTeam, teamChat);
+				break;
+			case REMOVE_MEMBER:
+				break;
+			case START_PRIVATE_CHAT:
+				ChatWindow chatWindowPrivate = (ChatWindow) message.getObject();
+				PrivateChatGUI privateChat = new PrivateChatGUI(chatWindowPrivate, username);
+				Integer threadIDPrivate = chatWindowPrivate.getThreadID();
+				privateChatMap.put(threadIDPrivate, privateChat);//should this use chatID? threadID?
+				break;
+			case USERS_ONLINE:
+				break;
+			case VIEW_ACCOUNT:
+				break;
+			default:
+				break;
+			}
+		}	
+	}
+
+	
+	//main method to run the GUI
+	public static void main(String args[]){
+		
+		Client newClient = new Client(args[0], Integer.parseInt(args[1]));	
+		View viewMain = new View(newClient);
+	}
+
+		
+}

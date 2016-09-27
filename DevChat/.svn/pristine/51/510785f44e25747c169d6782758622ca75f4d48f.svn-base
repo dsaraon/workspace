@@ -1,0 +1,105 @@
+package server;
+import general.Account;
+import general.ChatMessage;
+
+import java.util.*;
+
+
+/**
+ * This class contains stubs for methods which will need to be implemented somewhere on the server side
+ * All methods throw exceptions but these have not yet been specified
+ */
+public class Methods {
+		
+	
+	/**
+	 * logs a user in to the system
+	 * @param sessionID
+	 * @param username
+	 * @param password
+	 * @throws Exception
+	 */
+	public static void login(int sessionID, String username, String password) throws Exception {}
+	
+	
+	/**
+	 * asks the database to create a new account
+	 * @param sessionID
+	 * @param account
+	 * @throws Exception if account cannot be created
+	 */
+	public static void createAccount(int sessionID, Account account) throws Exception {}
+	
+	
+	/**
+	 * 
+	 * @param username
+	 * @return the account belonging to the username
+	 * @throws Exception
+	 */
+	public static Account viewAccount(String username) throws Exception {
+		/*
+		 * account *should* exist because user clicks on a username in gui, rather than inputting
+		 * string themselves (HCI error minimisation/reduction...(?) and whatsnot) but throws an error
+		 * if not possible
+		 */
+		return new Account();
+	}
+	
+	/**
+	 * 
+	 * @return a list of users currently online
+	 * @throws Exception
+	 */
+	public static ArrayList<String> usersOnline() throws Exception {
+		//request doesn't need to be sent to the database
+		return new ArrayList<String>();
+	}
+	
+	/**
+	 * 
+	 * @return a list of usernames for all accounts
+	 * @throws Exception
+	 */
+	public static ArrayList<String> allUsers() throws Exception {
+		return new ArrayList<String>();
+	}
+	
+	/**
+	 * starts a private chat
+	 * @param sessionID
+	 * @param username user with whom chat will be started
+	 * @return the sessionID of the username
+	 * @throws Exception
+	 */
+	public static int startPrivateChat(int sessionID, String username) throws Exception {
+		/*
+		 * the method will need to check that the person is online and that a connection
+		 * can be made- the errors thrown will reflect this
+		 */
+		return 0;
+	}
+	
+	/**
+	 * starts a group chat
+	 * @param sessionID
+	 * @param usernames users with whom chat should be started
+	 * @return the usernames and their sessions IDs for connections successfully made
+	 * @throws Exception
+	 */
+	public static Map<String, Integer> startGroupChat(int sessionID, String [] usernames) throws Exception {
+		// errors thrown will reflect the different stages involved
+		return new HashMap<String, Integer>();
+	}
+	
+	
+	public static void sendMessage(ChatMessage chatMessage) throws Exception {}
+	
+	public static ArrayList<ChatMessage> viewHistory(int chatID) throws Exception {
+		return new ArrayList<ChatMessage>();
+	}
+	
+	public static void addUser(String username, int chatID) throws Exception {}
+	
+	public static void removeUser(String username, int chatID) throws Exception {}
+}

@@ -1,0 +1,46 @@
+package server;
+import general.Message;
+
+import java.io.IOException;
+import java.io.ObjectOutputStream;
+import java.util.concurrent.LinkedBlockingQueue;
+
+
+public class Writer implements Runnable {
+	
+	private ObjectOutputStream out;
+	private LinkedBlockingQueue<Message> queue; //or maybe another queue
+	
+	public Writer(ObjectOutputStream out, LinkedBlockingQueue<Message> queue) {
+		this.out = out; //flushed in connection
+		this.queue = queue;
+	}
+
+	@Override
+	public void run() {
+		boolean stop = false;
+		while(!stop) {
+			try {
+				out.writeObject(queue.take());
+				out.flush();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (InterruptedException e) {
+				// maybe send all messages then close output stream
+				try {
+					out.close();
+					stop = true;
+				} catch (IOException e1) {
+					// erm... force exit anyway?
+					e1.printStackTrace();
+				}
+				e.printStackTrace();
+			}
+		}
+		
+	}
+	
+	
+
+}

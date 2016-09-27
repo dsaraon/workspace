@@ -1,0 +1,54 @@
+package revision;
+
+public class DoublyLinkedList {
+	
+	private DoublyLinkedList left;
+	Person p;
+	DoublyLinkedList right;
+	boolean empty;
+	
+	//normal
+	public DoublyLinkedList(DoublyLinkedList left, Person p,
+			DoublyLinkedList right) {
+		super();
+		this.empty = false;
+		this.left = left;
+		this.p = p;
+		this.right = right;
+	}
+	
+	//empty list
+	
+	
+	
+	
+	//new list with element to left
+	
+	public DoublyLinkedList getLeft() {
+		return left;
+	}
+	
+	public void setLeft(DoublyLinkedList left) {
+		this.left = left;
+	}
+	
+	public Person getP() {
+		return p;
+	}
+	
+	public void setP(Person p) {
+		this.p = p;
+	}
+	
+	public DoublyLinkedList getRight() {
+		return right;
+	}
+	
+	public void setRight(DoublyLinkedList right) {
+		this.right = right;
+	}
+	
+	
+	
+	
+}

@@ -1,0 +1,75 @@
+package revision;
+
+import Ex2.Person;
+
+public class DoublyLinkedList {
+	
+	DoublyLinkedList left;
+	Person p;
+	DoublyLinkedList right;
+	boolean empty;
+	
+	//normal
+	public DoublyLinkedList(DoublyLinkedList left, Person p,
+			DoublyLinkedList right) {
+		super();
+		this.empty = false;
+		this.left = left;
+		this.p = p;
+		this.right = right;
+	}
+	
+	//empty list
+	public DoublyLinkedList(){
+		this.empty = true;
+	}
+	
+	
+	   public static DoublyLinkedList empty() {
+	        return new DoublyLinkedList();
+	    }
+	   
+	//new list with element to left
+	
+	 public DoublyLinkedList(Person person, DoublyLinkedList right){
+		 this.empty = false;
+		 this.left = empty();
+		 this.p = person;
+		 this.right = right;
+		 this.getRight().setLeft(this);
+	 }
+	   
+	public DoublyLinkedList getLeft() {
+		return left;
+	}
+	
+	public void setLeft(DoublyLinkedList left) {
+		this.left = left;
+	}
+	
+	public Person getP() {
+		return p;
+	}
+	
+	public void setP(Person p) {
+		this.p = p;
+	}
+	
+	public DoublyLinkedList getRight() {
+		return right;
+	}
+	
+	public void setRight(DoublyLinkedList right) {
+		this.right = right;
+	}
+	
+	
+	//cons
+	
+	
+	
+	//check
+	
+	
+	
+}

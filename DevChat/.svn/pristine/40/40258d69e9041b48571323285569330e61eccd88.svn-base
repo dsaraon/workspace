@@ -1,0 +1,158 @@
+package server;
+import general.Account;
+import general.ChatMessage;
+import general.Message;
+
+
+import java.util.*;
+
+
+public class Protocol{
+	
+	private int sessionID;
+	
+	public Protocol(int sessionID) {
+		this.sessionID = sessionID;
+		
+	}
+	
+	/*
+	 * processes communication initiated by the client- another method should process
+	 * responses to communication initiated by the server
+	 * 
+	 * will need to be added to as we go
+	 */
+	public Message processMessage(Message message) {
+		Message.Status status = message.getStatus();
+		switch (status) {
+			case LOGIN : return login(message);
+			case CREATE_ACCOUNT : return createAccount(message);
+			case VIEW_ACCOUNT : return viewAccount(message);
+			case USERS_ONLINE : return usersOnline(message);
+			case ALL_USERS : return allUsers(message);
+			case START_PRIVATE_CHAT : return startPrivateChat(message);
+			case START_GROUP_CHAT : return startGroupChat(message);
+			case SEND_MESSAGE : return sendMessage(message);
+			case VIEW_HISTORY : return viewHistory(message);
+			case ADD_USER : return addUser(message);
+			case REMOVE_USER : return removeUser(message);
+			default : return new Message(Message.Status.ERROR, message.getThreadID(), message.getThreadID(), "message not recognised");
+		}
+	}
+	
+	private Message login(Message message) {
+		try {
+			//the expected object arguments - might need to handle null pointer exceptions
+			String username = (String)message.getObjects()[0];
+			String password = (String)message.getObjects()[1];
+			Methods.login(sessionID, username, password);
+			return new Message(Message.Status.SUCCESS, message.getThreadID(), message.getThreadID());
+		} catch (Exception e) {
+			return new Message(Message.Status.ERROR, message.getThreadID(), message.getThreadID(), e.getMessage());
+		}
+	}
+
+	private Message createAccount(Message message) {
+		 //EXPECTED: Client should ensure that user information is complete and valid before sending
+		Account account = (Account)message.getObjects()[0];
+		try {
+			Methods.createAccount(sessionID, account);
+			return new Message(Message.Status.SUCCESS, message.getThreadID(), message.getThreadID());
+		} catch (Exception e) {
+			return new Message(Message.Status.ERROR, message.getThreadID(), message.getThreadID(), e.getMessage());
+		}
+		
+	}
+
+	private Message viewAccount(Message message) {
+		String username = (String)message.getObjects()[0];
+		try {
+			Account account = Methods.viewAccount(username);
+			return new Message(Message.Status.SUCCESS, message.getThreadID(), message.getThreadID(), account);
+		} catch (Exception e) {
+			return new Message(Message.Status.ERROR, message.getThreadID(), message.getThreadID(), e.getMessage());
+		}
+	}
+	
+	private Message usersOnline(Message message) {
+		try {
+			ArrayList<String> online = Methods.usersOnline();
+			return new Message(Message.Status.SUCCESS, message.getThreadID(), message.getThreadID(), online);
+		} catch (Exception e) {
+			return new Message(Message.Status.ERROR, message.getThreadID(), message.getThreadID(), e.getMessage());
+		}
+	}
+	
+	private Message allUsers(Message message) {
+		try {
+			ArrayList<String> users = new ArrayList<String>();
+			return new Message(Message.Status.SUCCESS, message.getThreadID(), message.getThreadID(), users);
+		} catch (Exception e) {
+			return new Message(Message.Status.ERROR, message.getThreadID(), message.getThreadID(), e.getMessage());
+		}
+	}
+	
+	private Message startPrivateChat(Message message) {
+		try {
+			//the person the client wants to start a private chat with
+			String name = (String)message.getObjects()[0];
+			int connect = Methods.startPrivateChat(sessionID, name);
+			return new Message(Message.Status.SUCCESS, message.getThreadID(), message.getThreadID(), connect);
+			
+		} catch (Exception e) {
+			return new Message(Message.Status.ERROR, message.getThreadID(), message.getThreadID(), e.getMessage());
+		}
+	}
+	
+	private Message startGroupChat(Message message) {
+		try {
+			String [] names = (String[])message.getObjects();
+			Map<String, Integer> connections = Methods.startGroupChat(sessionID, names);
+			return new Message(Message.Status.SUCCESS, message.getThreadID(), message.getThreadID(), connections);
+		} catch (Exception e) {
+			return new Message(Message.Status.ERROR, message.getThreadID(), message.getThreadID(), e.getMessage());
+		}
+	}
+	
+	private Message sendMessage(Message message) {
+		try {
+			ChatMessage chatMessage = (ChatMessage)message.getObjects()[0];
+			Methods.sendMessage(chatMessage);
+			return new Message(Message.Status.SUCCESS, message.getThreadID(), message.getMessageID());
+		} catch (Exception e) {
+			return new Message(Message.Status.ERROR, message.getThreadID(), message.getThreadID(), e.getMessage());
+		}
+	}
+	
+	private Message viewHistory(Message message) {
+		try {
+			int chatID = (int)message.getObjects()[0];
+			ArrayList<ChatMessage> chat = Methods.viewHistory(chatID);
+			return new Message(Message.Status.SUCCESS, message.getThreadID(), message.getMessageID(), chat);
+		} catch (Exception e) {
+			return new Message(Message.Status.ERROR, message.getThreadID(), message.getThreadID(), e.getMessage());
+		}
+	}
+	
+	private Message addUser(Message message) {
+		try {
+			String username = (String)message.getObjects()[0];
+			int chatID = (int)message.getObjects()[1];
+			Methods.addUser(username, chatID);
+			return new Message(Message.Status.SUCCESS, message.getThreadID(), message.getMessageID());
+		} catch (Exception e) {
+			return new Message(Message.Status.ERROR, message.getThreadID(), message.getThreadID(), e.getMessage());
+		}
+	}
+	
+	private Message removeUser(Message message) {
+		try {
+			String username = (String)message.getObjects()[0];
+			int chatID = (int)message.getObjects()[1];
+			Methods.removeUser(username, chatID);
+			return new Message(Message.Status.SUCCESS, message.getThreadID(), message.getMessageID());
+		} catch (Exception e) {
+			return new Message(Message.Status.ERROR, message.getThreadID(), message.getThreadID(), e.getMessage());
+		}
+	}
+}

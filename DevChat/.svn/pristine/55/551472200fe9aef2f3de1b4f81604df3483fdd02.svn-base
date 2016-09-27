@@ -1,0 +1,64 @@
+package client;
+/**
+ * @author Jessica White
+ * @author Divyjyot Saraon
+ */
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.net.Socket;
+import java.util.Observable;
+
+/* The design of this 'Client' so far would need to call the making of the GUI. This ensures that the ID's are
+*  consistent which I don't think they would be should the GUI call the client??
+*  
+*  Divyjyot - it all follows pretty much the same principles as what you wrote, I just added the Threads part and
+*  seperated the concerns. Currently a skeleton and not the full working model.
+*/
+
+public class Client extends Observable{
+		String hostName = "hostName"; //will these two be retrieved from the server? Should match that of the ServerSocket  
+		int portNumber = 012345;    
+		Socket clientSocket;
+		private ObjectOutputStream out;
+		private ObjectInputStream in;
+		private Thread readerThread;
+		private OutgoingWriter writer;
+		private int userId;
+		
+		//TODO: client needs to spin up the relevant GUIs and remember the current user
+		
+		public void start(){
+			setupNetwork();
+			setupReader();
+			setupWriter();
+		}
+		
+		public void stop(){
+			readerThread.interrupt();
+		}
+		
+		private void setupReader() {
+			readerThread = new Thread(new IncomingReader(in));
+			readerThread.start();
+		}
+
+		private void setupWriter() {
+			writer = new OutgoingWriter(out);
+		}
+
+		private void setupNetwork(){
+			//connecting with the server -   
+			try{
+				clientSocket = new Socket(hostName, portNumber);
+			    out = new ObjectOutputStream(clientSocket.getOutputStream());
+				in = new ObjectInputStream(clientSocket.getInputStream());	
+			}catch(IOException e){
+				e.printStackTrace();
+			}
+		}
+		
+		public void sendMessage(String message, int chatId) {
+			writer.sendMessage(userId, chatId, message);
+		}
+	}

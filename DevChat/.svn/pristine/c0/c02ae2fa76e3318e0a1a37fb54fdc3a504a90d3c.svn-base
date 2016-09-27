@@ -1,0 +1,67 @@
+package general;
+
+import java.io.Serializable;
+import java.util.ArrayList;
+
+public class Chat implements Serializable {
+	
+	private int ID;
+	private ArrayList<String> usernames;
+	private boolean team;
+	private String teamname;
+	private boolean delivered; //not totally sure what to do with this yet
+	
+	public Chat(int ID, ArrayList<String> usernames) {
+		this.ID = ID;
+		this.usernames = usernames;
+		this.team = false;
+	}
+	
+	public Chat(int ID, ArrayList<String> usernames, String teamname) {
+		this.ID = ID;
+		this.usernames = usernames;
+		this.team = true;
+		this.teamname = teamname;
+	}
+
+	public int getID() {
+		return ID;
+	}
+
+	public void setID(int iD) {
+		ID = iD;
+	}
+
+	public ArrayList<String> getUsernames() {
+		return usernames;
+	}
+
+	public void setUsernames(ArrayList<String> usernames) {
+		this.usernames = usernames;
+	}
+
+	public boolean isTeam() {
+		return team;
+	}
+	
+	public String getTeamname() {
+		return teamname;
+	}
+
+	public boolean isDelivered() {
+		return delivered;
+	}
+
+	public void setDelivered(boolean delivered) {
+		this.delivered = delivered;
+	}
+
+	public void addUsername(String username) {
+		usernames.add(username);
+	}
+
+	public void removeUsername(String username) {
+		usernames.remove(username);
+	}
+
+}

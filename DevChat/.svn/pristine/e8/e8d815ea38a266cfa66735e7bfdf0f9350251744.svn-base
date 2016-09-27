@@ -1,0 +1,66 @@
+CREATE TABLE users
+(
+user_id				serial	 		PRIMARY KEY,
+username			varchar(20)		NOT NULL,
+email				varchar(50)		NOT NULL,
+password			varchar(20)		NOT NULL, 	-- password constraints are checked by client
+online				boolean			NOT NULL	-- not sure if this is needed if server maintains a lookup table
+);
+
+CREATE TABLE team
+(
+team_id				serial			PRIMARY KEY,
+team_name			varchar(20)		NOT NULL,
+team_admin			integer			NOT NULL 	REFERENCES	users (user_id),
+password			varchar(20)		NOT NULL
+);
+
+CREATE TABLE team_members
+(
+team_id				integer			REFERENCES team (team_id),
+user_id				integer			REFERENCES users (user_id),
+PRIMARY KEY 		(team_id, user_id)
+);
+
+/*
+CREATE TABLE chat_table
+(
+chat_id				integer			PRIMARY KEY,
+dev_chat			boolean						
+);
+*/
+
+CREATE TABLE private_chat
+(
+chat_id				serial			PRIMARY KEY,
+user1				integer			NOT NULL	REFERENCES users (user_id),
+user2				integer			NOT NULL	REFERENCES users (user_id),
+unread				boolean						-- if true, new messages are available since last login					
+);
+
+CREATE TABLE team_chat
+(
+chat_id				serial			PRIMARY KEY,
+team_id				integer			NOT NULL	REFERENCES team (team_id), -- UNIQUE?
+unread				boolean
+);	
+
+CREATE TABLE private_messages
+(
+message_id			serial,
+chat_id				integer,					--REFERENCES??
+message_sent		timestamptz,				-- is timezone needed or is this adjusted by client?
+user_posted			integer			REFERENCES users (user_id),
+text				varchar(250),				-- not null or can we have blank messages?
+PRIMARY KEY (chat_id, message_id) 				-- if time sent is the same for two messages, this won't work!!
+);
+
+CREATE TABLE team_messages
+(
+message_id			serial,
+chat_id				integer,					--REFERENCES??
+message_sent		timestamptz,				-- is timezone needed or is this adjusted by client?
+user_posted			integer			REFERENCES users (user_id),
+text				varchar(250),				-- not null or can we have blank messages?
+PRIMARY KEY (chat_id, message_id) 				-- if time sent is the same for two messages, this won't work!!
+);

@@ -1,0 +1,94 @@
+package tests;
+/**
+ * Tests for ChatWindow Private Chat methods.
+ * @author Jessica White
+ */
+import static org.junit.Assert.*;
+
+import java.util.ArrayList;
+import java.util.concurrent.LinkedBlockingQueue;
+
+import general.Chat;
+import general.ChatMessage;
+import general.Message;
+
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+
+/* TODO: Again ID in Chat could be made alterable but currently hard coded to 1
+ * Testnames => Given-When-Then
+ */
+
+public class ChatWindowPrivateChatTests {
+
+	private TestableChatWindow testWindow;
+	private String username = "TEST USERNAME";
+	private ChatMessage chatMessage; // for methods receiving ChatMessage
+	private LinkedBlockingQueue<Message> out;
+	private Chat chat;
+	private ArrayList<String> usernames;
+	private TestObserver testObserver;
+	private int threadID;
+
+	@Before
+	public void start(){
+		out = new LinkedBlockingQueue<Message>();
+		usernames = new ArrayList<String>();
+		chat = new Chat(1, usernames);
+		threadID = 23;
+		testWindow = new TestableChatWindow(threadID, username, chat, out);
+		testObserver = new TestObserver(testWindow);
+	}
+	
+	@After
+	public void stop(){
+		testObserver.stop();
+	}
+	
+	@Test
+	public void receiveMessage_success_inHasNewMessage() throws InterruptedException {
+		ChatMessage chatmessage = new ChatMessage(1, username, "hello");
+		Message newMessage = new Message(Message.Status.RECEIVE_PRIVATE_MESSAGE, 0, 0, chatMessage);
+		testWindow.receiveMessage(newMessage);
+		Message actual = testWindow.getIn().take();
+		assertEquals(actual, newMessage);
+	}
+
+	@Test
+	public void getPrivateHistory_success_GUIMessageHistory() throws InterruptedException {
+		testWindow.getPrivateHistory();	
+		Object[] resultObjects = new Object[] { new ArrayList<ChatMessage>() };
+		testWindow.getIn().put(new Message(Message.Status.SUCCESS, threadID, 1, resultObjects));
+		testWindow.testReceive();
+		assertTrue(testObserver.result.contains("history"));
+	}
+
+	@Test
+	public void getPrivateHistory_fail_GUIMessageError() throws InterruptedException {
+		testWindow.getPrivateHistory();	
+		Object[] resultObjects = new Object[] { new ArrayList<ChatMessage>() };
+		testWindow.getIn().put(new Message(Message.Status.ERROR, threadID, 1, resultObjects));
+		testWindow.testReceive();
+		assertTrue(testObserver.result.contains("error"));
+	}
+
+	//no response to success for send private message
+	
+	@Test
+	public void sendPrivateMessage_success_noGUIMessageError() {
+		ChatMessage chatmessage = new ChatMessage(1, username, "hello");
+		testWindow.sendPrivateMessage(chatmessage);		
+		assertFalse(testObserver.result.contains("error"));
+	}
+	
+	@Test
+	public void sendPrivateMessage_fail_GUIMessageError() throws InterruptedException {
+		ChatMessage chatmessage = new ChatMessage(1, username, "hello");
+		testWindow.sendPrivateMessage(chatmessage);		
+		Object[] resultObjects = new Object[] { new ArrayList<ChatMessage>() };
+		testWindow.getIn().put(new Message(Message.Status.ERROR, threadID, 1, resultObjects));
+		testWindow.testReceive();
+		assertTrue(testObserver.result.contains("error"));
+	}
+}

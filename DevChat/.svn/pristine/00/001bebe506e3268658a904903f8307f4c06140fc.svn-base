@@ -1,0 +1,106 @@
+package client;
+
+import general.Message;
+import general.Message.Status;
+
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.PrintWriter;
+import java.net.Socket;
+import java.net.UnknownHostException;
+import java.util.ArrayList;
+import java.util.Observable;
+import java.util.Observer;
+
+//currently the class is just dealing with a single client...establish link with server through protocol
+// FEW things to be sorted - threadID, main method - how and where will these be used? 
+// Exceptions need to be handled
+
+//INITIAl logic is - have a thread to listen to server, while observer will give info(convert to type "MESSAGE" ?) when button is pressed
+
+
+public class Client extends Observable{
+	
+
+		//should really put constructor here that calls setUpNetwork
+	
+		String hostName = "hostName"; //will these two be retrieved from the server? Should match that of the ServerSocket  
+		int portNumber = 012345;    
+		Socket clientSocket;
+		ObjectOutputStream out; // for reading and writing object type "Message"
+		ObjectInputStream in;
+		
+		
+		private void setUpNetwork(){
+			//connecting with the server -   
+			try{
+				clientSocket = new Socket(hostName, portNumber);
+			    out = new ObjectOutputStream(clientSocket.getOutputStream());
+				in = new ObjectInputStream(clientSocket.getInputStream());	
+				}catch(IOException e){
+				System.out.println("Exception");
+			}
+		}
+
+		//******read from server - write to GUI****** 
+		//messages received and sent - type "Message"
+		//this thread need to run from main method perhaps 
+		public class IncomingFromServer implements Runnable { 
+			public void run() {
+		
+				Message fromServer;
+				Message fromUser;
+				
+				//Let this be mock message from GUI - will need to read info from GUI in this format(or convert it)
+				Status mockStatus = Message.Status.LOGIN;
+				ArrayList<String> mockName = new ArrayList<String>();
+				mockName.add("Name");
+				Message mockMessage = new Message(mockStatus, 0, portNumber, mockName);
+				
+				try{
+					while ((fromServer = (Message) in.readObject()) != null) {
+					    
+						
+						//perform action HERE - will relay the info to GUI
+						System.out.println("Server: " + fromServer);
+					    
+					    
+					    if (fromServer.getStatus().equals(Message.Status.ERROR))
+					        break; //using break for now - will need to handle different types of errors differently
+			
+					    
+					    //*** THESE LINES OF CODE MAY BE TRANSFERRED TO ANOTHER METHOD WHERE WE ARE LISTENING TO THE GUI*** 
+					    fromUser = mockMessage;
+					    //this should really say if(!= EXIT) - may need to change protocol/Message
+					    if (fromUser.getStatus() != null) {
+					    	
+					    	//perform action HERE - should replay the info to server(may need to create in separate thread)
+					        System.out.println("Client: " + fromUser);
+					        
+					        
+					        out.writeObject(fromUser);
+					    }
+					}
+				}catch(IOException | ClassNotFoundException e){
+					System.out.println("Exception");
+				}
+			}
+		}
+		
+		//******read from GUI - write to server*******
+		//will relay different messages based on what button is pressed
+		//create simple message relay for now 
+		
+		//convert parameter received to object type "Message"
+		 public void IncomingFromUser(){
+			 
+		 }
+		
+		
+			
+	}

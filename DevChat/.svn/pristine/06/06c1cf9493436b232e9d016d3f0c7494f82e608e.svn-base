@@ -1,0 +1,123 @@
+package Tests;
+/**
+ * Tests for ChatWindow methods.
+ * @author Jessica White
+ */
+import static org.junit.Assert.*;
+
+import java.util.concurrent.LinkedBlockingQueue;
+
+import general.ChatMessage;
+import general.Message;
+
+import org.junit.Test;
+
+public class ChatWindowTests {
+	//Testnames => Given-When-Then
+	private TestableChatWindow testWindow;
+	private String username = "TEST USERNAME";
+	private ChatMessage chatMessage; // for methods receiving ChatMessage
+	
+	private Object[] objects;
+	
+/*	@Before
+	public void setUpIn() throws InterruptedException{
+		Message message1 = null; //need to make message
+		Message message2 = null; //need to make message
+		Message message3 = null; //need to make message
+
+		in.put(message1);
+		in.put(message2);
+		in.put(message3);
+	}
+*/
+
+	@Test
+	public void respondToServer_recievePrivateMessage_GUIMessageDisplayMessage() {
+		Message newMessage = new Message(Message.Status.RECEIVE_PRIVATE_MESSAGE, 12, 12, objects) ;
+	}	
+	
+	@Test
+	public void respondToServer_recieveTeamMessage_GUIMessageDisplayMessage() {
+		Message newMessage = new Message(Message.Status.RECEIVE_TEAM_MESSAGE, 12, 12, objects) ;
+
+	}
+	
+	@Test
+	public void respondToServer_addTeamMember_GUIMessageAddMember() {
+		Message newMessage = new Message(Message.Status.ADD_TEAM_MEMBER, 12, 12, objects) ;
+
+	}
+	
+	@Test
+	public void respondToServer_removeTeamMember_GUIMessageRemoveMember() {
+		Message newMessage = new Message(Message.Status.REMOVE_TEAM_MEMBER, 12, 12, objects) ;
+
+	}
+	
+	@Test
+	public void receiveMessage_sucess_inHasNewMessage() throws InterruptedException {
+		Message newMessage = new Message(Message.Status.RECEIVE_PRIVATE_MESSAGE, 12, 12, objects) ;
+		testWindow.receiveMessage(newMessage);
+		LinkedBlockingQueue<Message> actual = testWindow.getIn();
+		LinkedBlockingQueue<Message> expected = null;
+		expected.add(newMessage);
+	
+		assertEquals(actual, expected);
+	}
+	
+	@Test
+	public void getPrivateHistory_success_GUIMessageHistory() {
+		
+	}
+
+	@Test
+	public void getPrivateHistory_fail_GUIMessageError() {
+		
+	}
+
+	@Test
+	public void getTeamHistory_success_GUIMessageHistory() {
+		
+	}
+
+	@Test
+	public void getTeamHistory_fail_GUIMessageError() {
+		
+	}
+
+	//no response to success for send private message
+
+	@Test
+	public void sendPrivateMessage_fail_GUIMessageError() {
+		
+	}
+
+	//no response to success for send team message
+
+	@Test
+	public void sendTeamMessage_fail_GUIMessageError() {
+		
+	}
+
+	@Test
+	public void addTeamMember_success_GUIMessageAddMember() {
+		
+	}
+
+	@Test
+	public void addTeamMember_fail_GUIMessageError() {
+		
+	}
+	
+	@Test
+	public void removeTeamMember_success_GUIMessageRemoveMember() {
+		
+	}
+
+	@Test
+	public void removeTeamMember_fail_GUIMessageError() {
+		
+	}
+	
+}

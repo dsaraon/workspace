@@ -1,0 +1,314 @@
+package server;
+import general.Account;
+import general.Chat;
+import general.ChatMessage;
+import general.Message;
+
+import java.io.*;
+import java.net.*;
+import java.util.*;
+
+import database.*;
+
+public class Server {
+	
+	private ServerSocket serverSocket;
+	private Map<Integer, Connection> connections;
+	private Map<String, Integer> loggedIn; //maps usernames to sessionIDs
+	private Integer sessionIDCounter;
+	private Integer messageCounter;
+	private Queries database;
+	
+	public Server(int port) throws IOException {
+		serverSocket = new ServerSocket(port);
+		connections = new HashMap<Integer, Connection>();
+		loggedIn = new HashMap<String, Integer>();
+		sessionIDCounter = 1;
+		messageCounter = 1;
+		database = new Database();
+		
+	}
+	
+	
+	//some of these methods are calling each other- does synchronization still work?
+	private synchronized void addConnection(int sessionID, Connection connection) {
+		connections.put(sessionID, connection);
+	}
+	
+	private synchronized String getUsername(int sessionID) {
+		Set<Map.Entry<String, Integer>> set = loggedIn.entrySet();
+		for (Map.Entry<String, Integer> entry : set) {
+			if (entry.getValue().equals(sessionID)) {
+				return entry.getKey();
+			}
+		}
+		return null;
+			
+	}
+	
+	protected synchronized void removeConnection(int sessionID) {
+		String username = getUsername(sessionID);
+		if (username != null) {
+			removeLoggedIn(username);
+		}
+		connections.remove(sessionID);
+	}
+	
+	protected synchronized void addLoggedIn(String username, int sessionID) {
+		loggedIn.put(username, sessionID);
+	}
+	
+	protected synchronized void removeLoggedIn(String username) {
+		loggedIn.remove(username);
+	}
+	
+	protected void removeLoggedIn(int sessionID) {
+		String username = getUsername(sessionID);
+		if (username != null) {
+			removeLoggedIn(username);
+		}
+	}
+	
+	
+	public static void main(String [] args) {
+		Server server;
+		try {
+			server = new Server(Integer.parseInt(args[0]));
+			System.out.println("server connected");
+			while(true) {
+				//once server has been created, listen continuously for connections
+				try {
+					Socket clientSocket = server.serverSocket.accept();
+					//System.out.println("Connection added");
+					server.addConnection(server.sessionIDCounter, new Connection(server, clientSocket, server.sessionIDCounter));
+					server.sessionIDCounter++;
+				} catch (IOException e) {
+					System.out.println("unable to connect with socket");
+				}
+			}
+		} catch (IOException e) {
+			System.out.println("Unable to connect on port number " + args[0]); //or something along those lines
+		}
+	}
+	
+	//these methods will need some form of synchronisation
+	
+	protected synchronized void login(String username, String password) throws Exception {
+		database.login(username, password);
+	}
+	
+	protected synchronized void sendPrivateMessage(ChatMessage chatMessage) throws Exception {
+		ArrayList<String> members = database.chatMember(chatMessage.getID());
+		database.savePrivateMessage(chatMessage);
+		for (String username : members) {
+			if (loggedIn.containsKey(username)) {
+				int id = loggedIn.get(username);
+				Connection send = connections.get(id);
+				send.sendMessage(new Message(Message.Status.RECEIVE_PRIVATE_MESSAGE, 0, messageCounter, chatMessage));
+				messageCounter++;
+				//database.setDeliveredPrivate(chatMessage.getID(), username);
+			}
+		}		
+	}
+	
+	
+	/**
+	 * 
+	 * @param chatMessage
+	 * @throws Exception
+	 */
+	protected synchronized void sendTeamMessage(ChatMessage chatMessage) throws Exception {
+		ArrayList<String> members = database.chatMember(chatMessage.getID());
+		database.saveTeamMessage(chatMessage);
+		for (String username : members) {
+			if (loggedIn.containsKey(username)) {
+				int id = loggedIn.get(username);
+				Connection send = connections.get(id);
+				send.sendMessage(new Message(Message.Status.RECEIVE_TEAM_MESSAGE, 0, messageCounter, chatMessage));
+				messageCounter++;
+				//database.setDeliveredTeam(chatMessage.getID(), username);
+			}
+		}	
+	}
+	
+	/**
+	 * asks the database to create a new account
+	 * @param sessionID
+	 * @param account
+	 * @throws Exception if account cannot be created
+	 */
+	protected synchronized void createAccount(int sessionID, Account account) throws Exception {
+		String username = account.getUsername();
+		if (database.usernameFree(username)) {
+			database.createAccount(account);
+			addLoggedIn(username, sessionID);
+		} else {
+			throw new Exception("username already taken");
+		}
+	}
+	
+	/**
+	 * 
+	 * @param username
+	 * @return the account belonging to the username
+	 * @throws Exception
+	 */
+	protected synchronized Account viewAccount(String username) throws Exception {
+		return database.getAccount(username);
+	}
+	
+	/**
+	 * 
+	 * @return a set of users currently online
+	 */
+	protected synchronized ArrayList<String> usersOnline()  {
+		return new ArrayList<String>(loggedIn.keySet());
+	}
+	
+	/**
+	 * 
+	 * @return a list of usernames for all accounts
+	 * @throws Exception
+	 */
+	protected synchronized ArrayList<String> allUsers() throws Exception {
+		return database.allUsers();
+	}
+
+	//new Javadoc
+	protected synchronized Chat startPrivateChat(int sessionID, String username) throws Exception {
+		//put into database in lexicographic order
+		String myUsername = getUsername(sessionID);
+		if (username.compareTo(myUsername) < 0) {
+			return database.createPrivateChat(username, myUsername);
+		} else {
+			return database.createPrivateChat(myUsername, username);
+		}
+	}
+	
+	
+	protected synchronized Chat makeTeam(int sessionID, String teamname, String [] usernames) throws Exception {
+		String [] members = new String [usernames.length + 1];
+		members[0] = getUsername(sessionID);
+		for (int i = 1; i < members.length; i++) {
+			members[i] = usernames[i-1];
+			//send message to all members of team to join
+		}
+		return  database.createTeam(teamname, members);
+
+	}
+	
+	
+	/**
+	 * 
+	 * @param chatID
+	 * @return a list of messages
+	 * @throws Exception
+	 */
+	protected synchronized ArrayList<ChatMessage> viewPrivateHistory(int chatID) throws Exception {
+		return database.getHistoryPrivate(chatID);
+	}
+	
+	/**
+	 * 
+	 * @param teamID
+	 * @return a list of messages
+	 * @throws Exception
+	 */
+	protected synchronized ArrayList<ChatMessage> viewTeamHistory(int teamID) throws Exception {
+		return database.getHistoryTeam(teamID);
+	}
+	
+	
+	/**
+	 * adds a user to a team
+	 * @param username
+	 * @param teamID
+	 * @throws Exception
+	 */
+
+	protected synchronized void addUser(String username, Chat chat) throws Exception {
+		database.addUser(username, chat.getID());
+		ArrayList<String> team = database.teamMembers(chat.getID());
+		for(String member : team) {
+			if (loggedIn.containsKey(member) && !member.equals(username)) { //don't send to the person being added
+				int id = loggedIn.get(member);
+				Connection send = connections.get(id);
+				send.sendMessage(new Message(Message.Status.ADD_TEAM_MEMBER, 0, messageCounter, username));
+				messageCounter++;
+			}
+			if (loggedIn.containsKey(username)) { //ask username to join team
+				Chat newChat = chat;
+				newChat.addUsername(username);
+				int id = loggedIn.get(username);
+				Connection send = connections.get(id);
+				send.sendMessage(new Message(Message.Status.JOIN_TEAM, 0, messageCounter, newChat));
+				messageCounter++;
+			}
+		}
+	}
+	
+	
+	/**
+	 * removes user from a team 
+	 * @param username
+	 * @param teamID
+	 * @throws Exception
+	 */
+	protected synchronized void removeUser(String username, int teamID) throws Exception {
+		database.removeUser(username, teamID);
+		ArrayList<String> team = database.teamMembers(teamID);
+		for(String member : team) {
+			if (loggedIn.containsKey(member)) {
+				int id = loggedIn.get(member);
+				Connection send = connections.get(id);
+				send.sendMessage(new Message(Message.Status.ADD_TEAM_MEMBER, 0, messageCounter, username));
+				messageCounter++;
+			}
+		}
+		if (loggedIn.containsKey(username)) {
+			int id = loggedIn.get(username);
+			Connection send = connections.get(id);
+			//create new message status for remove team
+			messageCounter++;
+		}
+	}
+	
+	/**
+	 * 
+	 * @param sessionID
+	 * @return
+	 * @throws Exception
+	 */
+	protected synchronized ArrayList<Chat> getChats(int sessionID) throws Exception {
+		return database.getChats(getUsername(sessionID));
+	}
+	
+	/**
+	 * 
+	 * @param sessionID
+	 * @return
+	 * @throws Exception
+	 */
+	protected synchronized ArrayList<Chat> getTeams(int sessionID) throws Exception{
+		return database.getTeams(getUsername(sessionID));
+	}
+	
+	//might not need these...
+	
+	/**
+	 * 
+	 * @param username
+	 * @param chatID
+	 * @throws Exception
+	 */
+	protected synchronized void setDeliveredPrivate(String username, int chatID) throws Exception {}
+	
+	/**
+	 * 
+	 * @param username
+	 * @param teamID
+	 * @throws Exception
+	 */
+	protected synchronized void setDeliveredTeam(String username, int teamID) throws Exception {}
+	
+}

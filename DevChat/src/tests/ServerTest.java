@@ -1,0 +1,524 @@
+package tests;
+
+import static org.junit.Assert.*;
+import general.Account;
+import general.Chat;
+import general.ChatMessage;
+import general.Message;
+
+import java.io.*;
+import java.net.Socket;
+import java.util.ArrayList;
+
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+/**
+ * These tests write messages to the server and check the response
+ * Expected response gives the message status and, if objects are expected, their types
+ * The server must be running with TestDatabase to use these tests
+ */
+public class ServerTest {
+	
+	
+	private Socket socket;
+	private ObjectOutputStream out;
+	private ObjectInputStream in;
+	
+	/**
+	 * Initialises socket and input/output streams
+	 * @throws IOException
+	 */
+	@Before
+	public void initialise() throws IOException {
+		socket = new Socket("127.0.0.1", 8888);
+		out = new ObjectOutputStream(socket.getOutputStream());
+		out.flush();
+		in = new ObjectInputStream(socket.getInputStream());
+	}
+	
+	/**
+	 * Closes socket and input/output streams
+	 * @throws IOException
+	 */
+	@After
+	public void finish() throws IOException {
+		in.close();
+		out.close();
+		socket.close();
+	}
+	
+	/**
+	 * Expected response: SUCCESS
+	 */
+	@Test
+	public void loginSuccess() {
+		try {
+			out.writeObject(new Message(Message.Status.LOGIN, 0, 0, "firstname", "password"));
+			Message message = (Message)in.readObject();
+			assertTrue(compareMessages(new Message(Message.Status.SUCCESS, 0, 0), message));
+		} catch (IOException | ClassNotFoundException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	/**
+	 * Expected response: ERROR
+	 */
+	@Test
+	public void loginFail() {
+		try {
+			out.writeObject(new Message(Message.Status.LOGIN, 0, 1, "firstname", "incorrect password"));
+			Message message = (Message)in.readObject();
+			assertTrue(compareMessages(new Message(Message.Status.ERROR, 0, 1), message));
+		} catch (IOException | ClassNotFoundException e) {
+			e.printStackTrace();
+			fail();
+		}
+	}
+	
+	/**
+	 * Expected response: SUCCESS
+	 */
+	@Test
+	public void createAccountSuccess() {
+		try {
+			out.writeObject(new Message(Message.Status.CREATE_ACCOUNT, 1, 0, new Account("username", "password", "email")));
+			Message message = (Message)in.readObject();
+			assertTrue(compareMessages(new Message(Message.Status.SUCCESS, 1, 0), message));
+			
+		} catch (IOException | ClassNotFoundException e) {
+			e.printStackTrace();
+			fail();
+		}
+	}
+	
+	/**
+	 * Expected response: ERROR
+	 */
+	@Test
+	public void createAccountFail() {
+		try {
+			out.writeObject(new Message(Message.Status.CREATE_ACCOUNT, 1, 1, new Account("another username", "password", "email")));
+			Message message = (Message)in.readObject();
+			assertTrue(compareMessages(new Message(Message.Status.ERROR, 1, 1), message));
+		} catch (IOException | ClassNotFoundException e) {
+			e.printStackTrace();
+			fail();
+		}
+	}
+	
+	/**
+	 * Expected response: SUCCESS
+	 */
+	@Test
+	public void viewAccountSuccess() {
+		try {
+			out.writeObject(new Message(Message.Status.VIEW_ACCOUNT, 2, 0, "a"));
+			Message message = (Message)in.readObject();
+			assertTrue(compareMessages(new Message(Message.Status.SUCCESS, 2, 0), message));
+		} catch (IOException | ClassNotFoundException e) {
+			e.printStackTrace();
+			fail();
+		}
+	}
+	
+	/**
+	 * Expected response: ERROR
+	 */
+	@Test
+	public void viewAccountFail() {
+		try {
+			out.writeObject(new Message(Message.Status.VIEW_ACCOUNT, 2, 1, "b"));
+			Message message = (Message)in.readObject();
+			assertTrue(compareMessages(new Message(Message.Status.ERROR, 2, 1), message));
+			
+		} catch (IOException | ClassNotFoundException e) {
+			e.printStackTrace();
+			fail();
+		}
+	}
+	
+	/**
+	 * Expected response: SUCCESS, ArrayList
+	 */
+	@Test
+	public void allUsersSuccess() {
+		try {
+			out.writeObject(new Message(Message.Status.ALL_USERS, 3, 0));
+			Message message = (Message)in.readObject();
+			assertTrue(compareMessages(new Message (Message.Status.SUCCESS, 3, 0), message) &&
+					message.getObjects()[0] instanceof ArrayList);
+		} catch (IOException | ClassNotFoundException e) {
+			e.printStackTrace();
+			fail();
+		}
+	}
+	
+	/**
+	 * Expected response: SUCCESS, Chat
+	 */
+	@Test
+	public void startPrivateChatSuccess() {
+		try {
+			out.writeObject(new Message(Message.Status.LOGIN, 0, 0, "firstname", "password"));
+			Message message = (Message)in.readObject();
+			out.writeObject(new Message(Message.Status.START_PRIVATE_CHAT, 4, 0, "username"));
+			message = (Message)in.readObject();
+			assertTrue(compareMessages(new Message (Message.Status.SUCCESS, 4, 0), message) &&
+					message.getObjects()[0] instanceof Chat);
+		} catch (IOException | ClassNotFoundException e) {
+			e.printStackTrace();
+			fail();
+		}
+	}
+	
+	/**
+	 * Expected response: ERROR
+	 */
+	@Test
+	public void startPrivateChatFail() {
+		try {
+			out.writeObject(new Message(Message.Status.LOGIN, 0, 0, "firstname", "password"));
+			Message message = (Message)in.readObject();
+			out.writeObject(new Message(Message.Status.START_PRIVATE_CHAT, 4, 1, "fail"));
+			message = (Message)in.readObject();
+			assertTrue(compareMessages(new Message (Message.Status.ERROR, 4, 1), message));
+		} catch (IOException | ClassNotFoundException e) {
+			e.printStackTrace();
+			fail();
+		}
+	}
+	
+	/**
+	 * Expected response: SUCCESS, Chat
+	 */
+	@Test
+	public void makeTeamSuccess() {
+		try {
+			out.writeObject(new Message(Message.Status.LOGIN, 0, 0, "firstname", "password"));
+			Message message = (Message)in.readObject();
+			ArrayList<String> usernames = new ArrayList<String>();
+			usernames.add("username");
+			usernames.add("another username");
+			out.writeObject(new Message(Message.Status.MAKE_TEAM, 5, 0, "teamname", usernames));
+			message = (Message)in.readObject();
+			assertTrue(compareMessages(new Message (Message.Status.SUCCESS, 5, 0), message) &&
+					(message.getObjects()[0] instanceof Chat));
+		} catch (IOException | ClassNotFoundException e) {
+			e.printStackTrace();
+			fail();
+		}
+	}
+	
+	/**
+	 * Expected response: ERROR
+	 */
+	@Test
+	public void makeTeamFail() {
+		try {
+			out.writeObject(new Message(Message.Status.LOGIN, 0, 0, "firstname", "password"));
+			Message message = (Message)in.readObject();
+			ArrayList<String> usernames = new ArrayList<String>();
+			usernames.add("username");
+			usernames.add("another username");
+			out.writeObject(new Message(Message.Status.MAKE_TEAM, 5, 1, "fail", usernames));
+			message = (Message)in.readObject();
+			assertTrue(compareMessages(new Message (Message.Status.ERROR, 5, 1), message));
+		} catch (IOException | ClassNotFoundException e) {
+			e.printStackTrace();
+			fail();
+		}
+	}
+	
+	/**
+	 * Expected response: SUCCESS, ArrayList
+	 */
+	@Test
+	public void viewPrivateHistorySuccess() {
+		try {
+			out.writeObject(new Message(Message.Status.VIEW_PRIVATE_HISTORY, 6, 0, 1));
+			Message message = (Message)in.readObject();
+			assertTrue(compareMessages(new Message (Message.Status.SUCCESS, 6, 0), message) &&
+					(message.getObjects()[0] instanceof ArrayList));
+		} catch (IOException | ClassNotFoundException e) {
+			e.printStackTrace();
+			fail();
+		}
+	}
+	
+	/**
+	 * Expected response: ERROR
+	 */
+	@Test
+	public void viewPrivateHistoryFail() {
+		try {
+			out.writeObject(new Message(Message.Status.VIEW_PRIVATE_HISTORY, 6, 1, 2));
+			Message message = (Message)in.readObject();
+			assertTrue(compareMessages(new Message (Message.Status.ERROR, 6, 1), message));
+		} catch (IOException | ClassNotFoundException e) {
+			e.printStackTrace();
+			fail();
+		}
+	}
+	
+	/**
+	 * Expected response: SUCCESS, ArrayList
+	 */
+	@Test
+	public void viewTeamHistorySuccess() {
+		try {
+			out.writeObject(new Message(Message.Status.VIEW_TEAM_HISTORY, 7, 0, 1));
+			Message message = (Message)in.readObject();
+			assertTrue(compareMessages(new Message (Message.Status.SUCCESS, 7, 0), message) &&
+					(message.getObjects()[0] instanceof ArrayList));
+		} catch (IOException | ClassNotFoundException e) {
+			e.printStackTrace();
+			fail();
+		}
+	}
+	
+	
+	/**
+	 * Expected response: ERROR
+	 */
+	@Test
+	public void viewTeamHistoryFail() {
+		try {
+			out.writeObject(new Message(Message.Status.VIEW_TEAM_HISTORY, 7, 0, 2));
+			Message message = (Message)in.readObject();
+			assertTrue(compareMessages(new Message (Message.Status.ERROR, 7, 0), message));
+		} catch (IOException | ClassNotFoundException e) {
+			e.printStackTrace();
+			fail();
+		}
+	}
+	
+	/**
+	 * Expected response: SUCCESS, ChatMessage
+	 */
+	@Test
+	public void sendPrivateMessageSuccess() {
+		try {
+			out.writeObject(new Message(Message.Status.LOGIN, 0, 0, "firstname", "password"));
+			Message message = (Message)in.readObject();
+			out.writeObject(new Message(Message.Status.SEND_PRIVATE_MESSAGE, 8, 0, new ChatMessage(1, null, null, "hello")));
+			//first message back should be request to join chat.
+			message = (Message)in.readObject();
+			assertTrue(message.getStatus() == Message.Status.RECEIVE_PRIVATE_MESSAGE && 
+					message.getObjects()[0] instanceof ChatMessage);
+		} catch (IOException | ClassNotFoundException e) {
+			e.printStackTrace();
+			fail();
+		}
+	}
+	
+	/**
+	 * Expected response: ERROR
+	 */
+	@Test
+	public void sendPrivateMessageFail() {
+		try {
+			out.writeObject(new Message(Message.Status.LOGIN, 0, 0, "firstname", "password"));
+			Message message = (Message)in.readObject();
+			out.writeObject(new Message(Message.Status.SEND_PRIVATE_MESSAGE, 8, 1, new ChatMessage(2, null, null, "hello")));
+			message = (Message)in.readObject();
+			assertTrue(compareMessages(new Message (Message.Status.ERROR, 8, 1), message));
+		} catch (IOException | ClassNotFoundException e) {
+			e.printStackTrace();
+			fail();
+		}
+	}
+	
+	/**
+	 * Expected response: SUCCESS, ChatMessage
+	 */
+	@Test
+	public void sendTeamMessageSuccess() {
+		try {
+			out.writeObject(new Message(Message.Status.LOGIN, 0, 0, "firstname", "password"));
+			Message message = (Message)in.readObject();
+			out.writeObject(new Message(Message.Status.SEND_TEAM_MESSAGE, 9, 0, new ChatMessage(1, null, null, "hello")));
+			//first message back should be request to join chat.
+			message = (Message)in.readObject();
+			assertTrue(message.getStatus() == Message.Status.RECEIVE_TEAM_MESSAGE && 
+					message.getObjects()[0] instanceof ChatMessage);
+		} catch (IOException | ClassNotFoundException e) {
+			e.printStackTrace();
+			fail();
+		}
+	}
+	
+	/**
+	 * Expected response: ERROR
+	 */
+	@Test
+	public void sendTeamMessageFail() {
+		try {
+			out.writeObject(new Message(Message.Status.LOGIN, 0, 0, "firstname", "password"));
+			Message message = (Message)in.readObject();
+			out.writeObject(new Message(Message.Status.SEND_TEAM_MESSAGE, 9, 1, new ChatMessage(2, null, null, "hello")));
+			message = (Message)in.readObject();
+			assertTrue(compareMessages(new Message (Message.Status.ERROR, 9, 1), message));
+		} catch (IOException | ClassNotFoundException e) {
+			e.printStackTrace();
+			fail();
+		}
+	}
+	
+	/**
+	 * Expected response: ADD_TEAM_MEMBER
+	 */
+	@Test
+	public void addUserSuccess() {
+		try {
+			out.writeObject(new Message(Message.Status.LOGIN, 0, 0, "firstname", "password"));
+			Message message = (Message)in.readObject();
+			ArrayList<String> users = new ArrayList<String>();
+			users.add("firstname");
+			out.writeObject(new Message(Message.Status.ADD_USER, 11, 0, "person", new Chat(1, users, "teamname")));
+			message = (Message)in.readObject();
+			assertTrue(message.getStatus() == Message.Status.ADD_TEAM_MEMBER);
+		} catch (IOException | ClassNotFoundException e) {
+			e.printStackTrace();
+			fail();
+		}
+	}
+	 
+	/**
+	 * Expected response: ERROR
+	 */
+	@Test
+	public void addUserFail() {
+		try {
+			out.writeObject(new Message(Message.Status.LOGIN, 0, 0, "firstname", "password"));
+			Message message = (Message)in.readObject();
+			ArrayList<String> users = new ArrayList<String>();
+			users.add("firstname");
+			out.writeObject(new Message(Message.Status.ADD_USER, 11, 0, "person", new Chat(2, users, "teamname")));
+			message = (Message)in.readObject();
+			assertTrue(message.getStatus() == Message.Status.ERROR);
+		} catch (IOException | ClassNotFoundException e) {
+			e.printStackTrace();
+			fail();
+		}
+	}
+	
+	
+	/**
+	 * Expected response: REMOVE_TEAM_MEMBER, String
+	 */
+	@Test
+	public void removeUserSuccess() {
+		try {
+			out.writeObject(new Message(Message.Status.LOGIN, 0, 0, "firstname", "password"));
+			Message message = (Message)in.readObject();
+			out.writeObject(new Message(Message.Status.REMOVE_USER, 11, 0, "person", 1));
+			//first message back should be request to remove the team member
+			message = (Message)in.readObject();
+			System.out.println(message.getStatus());
+			assertTrue(message.getStatus() == Message.Status.REMOVE_TEAM_MEMBER && 
+					(int)message.getObjects()[0] == 1 &&((String)message.getObjects()[1]).equals("person"));
+		} catch (IOException | ClassNotFoundException e) {
+			e.printStackTrace();
+			fail();
+		}
+	}
+	
+	/**
+	 * Expected response: ERROR
+	 */
+	@Test
+	public void removeUserFail() {
+		try {
+			out.writeObject(new Message(Message.Status.LOGIN, 0, 0, "firstname", "password"));
+			Message message = (Message)in.readObject();
+			out.writeObject(new Message(Message.Status.REMOVE_USER, 11, 1, "person", 2));
+			message = (Message)in.readObject();
+			assertTrue(compareMessages(new Message (Message.Status.ERROR, 11, 1), message));
+		} catch (IOException | ClassNotFoundException e) {
+			e.printStackTrace();
+			fail();
+		}
+	}
+
+	/**
+	 * Expected response: SUCCESS, ArrayList
+	 */
+	@Test
+	public void getPrivateChatsSuccess() {
+		try {
+			out.writeObject(new Message(Message.Status.LOGIN, 0, 0, "firstname", "password"));
+			Message message = (Message)in.readObject();
+			out.writeObject(new Message(Message.Status.GET_PRIVATE_CHATS, 11, 0));
+			message = (Message)in.readObject();
+			assertTrue(compareMessages(new Message(Message.Status.SUCCESS, 11, 0), message) &&
+					message.getObjects()[0] instanceof ArrayList);
+		} catch (IOException | ClassNotFoundException e) {
+			e.printStackTrace();
+			fail();
+		}
+	}
+	
+	/**
+	 * Expected response: ERROR
+	 */
+	@Test
+	public void getPrivateChatsFail() {
+		try {
+			out.writeObject(new Message(Message.Status.LOGIN, 0, 0, "firstname1", "password"));
+			Message message = (Message)in.readObject();
+			out.writeObject(new Message(Message.Status.GET_PRIVATE_CHATS, 11, 1));
+			message = (Message)in.readObject();
+			assertTrue(compareMessages(new Message (Message.Status.ERROR, 11, 1), message));
+		} catch (IOException | ClassNotFoundException e) {
+			e.printStackTrace();
+			fail();
+		}
+	}
+	
+	/**
+	 * Expected response: SUCCESS, ArrayList
+	 */
+	@Test
+	public void getTeamChatsSuccess() {
+		try {
+			out.writeObject(new Message(Message.Status.LOGIN, 0, 0, "firstname", "password"));
+			Message message = (Message)in.readObject();
+			out.writeObject(new Message(Message.Status.GET_TEAM_CHATS, 12, 0));
+			message = (Message)in.readObject();
+			assertTrue(compareMessages(new Message(Message.Status.SUCCESS, 12, 0), message) &&
+					message.getObjects()[0] instanceof ArrayList);
+		} catch (IOException | ClassNotFoundException e) {
+			e.printStackTrace();
+			fail();
+		}
+	}
+	
+	/**
+	 * Expected response: ERROR
+	 */
+	@Test
+	public void getTeamChatsFail() {
+		try {
+			out.writeObject(new Message(Message.Status.LOGIN, 0, 0, "firstname1", "password"));
+			Message message = (Message)in.readObject();
+			out.writeObject(new Message(Message.Status.GET_TEAM_CHATS, 12, 1));
+			message = (Message)in.readObject();
+			assertTrue(compareMessages(new Message (Message.Status.ERROR, 12, 1), message));
+		} catch (IOException | ClassNotFoundException e) {
+			e.printStackTrace();
+			fail();
+		}
+	}
+	
+	
+	
+	/**
+	 * compares the status, threadID and messageID of two messages
+	 */
+	public static boolean compareMessages(Message messageA, Message messageB) {
+		return messageA.getStatus() == messageB.getStatus() && messageA.getThreadID() == messageB.getThreadID()
+				&& messageA.getMessageID() == messageB.getMessageID();
+	}
+}

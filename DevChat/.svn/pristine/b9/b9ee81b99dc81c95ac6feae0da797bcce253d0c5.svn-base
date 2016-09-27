@@ -1,0 +1,10 @@
+//THIS CLASS IS NOT COMPLETE!
+public class ChatMessage {
+	
+	private int chatID;
+	private String username; 
+	//maybe int if we have user IDs?
+	//what ever class we use for the date!
+	private String message;
+
+}

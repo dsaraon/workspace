@@ -1,0 +1,26 @@
+-	Change Structure to all GUI’s to match InviteRemoveGUI
+-	CreateAccountGUI
+	o	Password min. 8 characters
+	o	Add Password Confirmation in
+	o	Languages
+	o	Restrict Characters on Personal Info. field
+-	InviteRemoveGUI
+	o	Autocomplete Name
+	o	No name to start
+	o	Parameterize JComboBox
+	o	What to do if added same person twice
+	o	Updating contacts list as you add people 
+-	ContactsPanel
+	o	Use HTML Code to signify whether online or not
+-	ViewAccountGUI
+	o	Create!
+-	ChatGUI
+	o	Grey out Invite Button for Private Chat
+	o	Resizing Issue
+	o	Get rid of annoying line border around buttons when selected
+-	InboxGUI
+	o	Work out way of converting chat objects appropriate format of HTML to match example
+-	MainGUI
+	o	Resize Issue
+	o	Improve Layout
+-	Change Icons and Font to Nice Colour seen in addremoveicon

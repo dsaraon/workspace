@@ -1,0 +1,30 @@
+package client;
+
+/**
+ * GUIMessage is the class used by the client to notify the observer of changes
+ *
+ */
+public class GUIMessage {
+	
+	//TODO: would be nice to separate errors HISTORY_RETRIEVAL_ERROR, MESSAGE_ERROR, REMOVE_USER_ERROR, ADD_USER_ERROR	
+	//TODO: Maybe add success for testing?
+	public static enum Status {LOGGED_IN, LOGIN_FAIL, ACCOUNT_CREATED, ACCOUNT_CREATED_FAIL, VIEW_ACCOUNT, USERS_ONLINE,
+		ALL_USERS, START_PRIVATE_CHAT, MAKE_TEAM, LEAVE_TEAM, ADD_MEMBER, REMOVE_MEMBER, DISPLAY_MESSAGE, HISTORY, ALL_PRIVATE_CHATS, 
+		ALL_TEAM_CHATS, LOGOUT, ERROR, CONNECTED, DISCONNECTED, JOIN_TEAM, JOIN_CHAT, EXIT_TEAM};
+		
+	private Status status;
+	private Object object;
+	
+	public GUIMessage(Status status, Object object) {
+		this.status = status;
+		this.object = object;
+	}
+	
+	public Status getStatus() {
+		return status;
+	}
+	
+	public Object getObject() {
+		return object;
+	}
+}

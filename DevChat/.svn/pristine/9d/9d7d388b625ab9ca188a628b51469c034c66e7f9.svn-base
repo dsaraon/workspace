@@ -1,0 +1,29 @@
+package client;
+/**
+ * @author Jessica White
+ * @author Divyjyot Saraon
+ */
+import java.io.IOException;
+import java.io.ObjectOutputStream;
+
+import general.ChatMessage;
+
+public class OutgoingWriter {
+
+	private ObjectOutputStream outputStream;
+
+	public OutgoingWriter(ObjectOutputStream out) {
+		outputStream = out;
+	}
+
+	public void sendMessage(int userId, int chatId, String messageText) {
+		//TODO: Fix this depending on constructor made.
+		//ChatMessage message = new ChatMessage(userId, chatId, messageText);
+		ChatMessage message = new ChatMessage();
+		try{
+			outputStream.writeObject(message);
+		}catch(IOException ex){
+			ex.printStackTrace();
+		}
+	}
+}

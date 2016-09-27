@@ -1,0 +1,46 @@
+package testclient;
+
+import general.*;
+
+import java.io.*;
+
+public class Listener implements Runnable {
+	
+	private ObjectInputStream in;
+	
+	public Listener(ObjectInputStream in) {
+		this.in = in;
+	}
+
+
+	@Override
+	public void run() {
+		boolean stop = false;
+		while (!stop) {
+			try {
+				Message message = (Message)in.readObject();
+				if (message.getStatus() == Message.Status.RECEIVE_PRIVATE_MESSAGE) {
+					ChatMessage chatMessage = (ChatMessage)message.getObjects()[0];
+					System.out.println(chatMessage.getUsername() + " >>> " + chatMessage.getMessage());
+				} else if (message.getStatus() == Message.Status.ERROR) {
+					System.out.println("ERROR");
+				}
+			
+			} catch (EOFException e) {
+				try {
+					in.close();
+					stop = true;
+				} catch (IOException e1) {
+					e.printStackTrace();
+				}
+			} catch (ClassNotFoundException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+	}
+
+}

@@ -1,0 +1,146 @@
+package client.gui;
+
+import java.awt.BorderLayout;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.net.URL;
+import java.util.Observable;
+import java.util.Observer;
+
+import javax.swing.ImageIcon;
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+
+public class ProfilePanel extends JPanel implements Observer, ActionListener {
+	
+	/**
+	 * Serial Version
+	 */
+	private static final long serialVersionUID = 1L;
+	
+	static final private String VIEW_PROFILE = "viewProfile";
+	
+	//private Client client; // Declare Model (Backend)
+	
+	// Declare Components
+	JButton profileButton;
+	
+	//public ProfilePanel(Client client) {
+	public ProfilePanel() {
+		
+		//Create and set up the window.
+		setPreferredSize(new Dimension(200, 200)); // Set Size
+		//setResizable(false);
+		Font font = new Font("Calibri", Font.BOLD, 18); // Default Font
+		//Font font2 = new Font("Calibri", Font.BOLD, 18);
+		
+		// Integrate GUI with backend
+		//this.client = client; 
+		//client.addObserver(this);
+		
+		// Setup Components
+//		this.setLayout(new GridBagLayout());
+//		GridBagConstraints c = new GridBagConstraints();
+		this.setLayout(new BorderLayout());
+		JPanel south = new JPanel();
+		south.setLayout(new GridBagLayout());
+		GridBagConstraints c = new GridBagConstraints();
+		
+		// Labels
+		JLabel name  = new JLabel("Harry Seager", JLabel.LEFT);
+		JLabel company = new JLabel("Cisco Systems", JLabel.LEFT);
+		name.setFont(font);
+		company.setFont(font);
+		
+		// Buttons
+		profileButton = makeNavigationButton("personicon.png", VIEW_PROFILE,
+				"View Profile", "View Profile");
+		
+//		// Adding Components
+//		c.gridx = 0;
+//		c.gridy = 0;
+//		c.anchor = GridBagConstraints.PAGE_START;
+//		c.ipadx = 50;
+//		add(profileButton, c);
+//		
+		c.gridx = 0;
+		c.gridy = 0;
+		c.insets = new Insets(5,0,0,0);
+		c.anchor = GridBagConstraints.CENTER;
+		south.add(name, c);
+		
+		c.gridx = 0;
+		c.gridy = 1;
+		//c.fill = GridBagConstraints.HORIZONTAL;
+		c.anchor = GridBagConstraints.CENTER;
+		south.add(company, c);
+		
+		add(profileButton, BorderLayout.NORTH);
+		add(south, BorderLayout.CENTER);
+		//add(company, BorderLayout.SOUTH);
+		
+		setVisible(true); // Make Frame Visible
+	}
+	
+	protected JButton makeNavigationButton(String imageName,
+			String actionCommand, String toolTipText, String altText) {
+		// Look for the image.
+		String imgLocation = "" + imageName;
+		//String imgLocation = "images/" + imageName;
+		URL imageURL = ProfilePanel.class.getResource(imgLocation);
+
+		// Create and initialize the button.
+		JButton button = new JButton();
+		button.setActionCommand(actionCommand);
+		button.setToolTipText(toolTipText);
+		button.addActionListener(this);
+
+		if (imageURL != null) { // image found
+			button.setIcon(new ImageIcon(imageURL, altText));
+		} else { // no image found
+			button.setText(altText);
+			System.err.println("Resource not found: " + imgLocation);
+		}
+
+		return button;
+	}
+
+	@Override
+	public void actionPerformed(ActionEvent e) {
+		String cmd = e.getActionCommand();
+		
+		switch(cmd){
+		case VIEW_PROFILE:
+			// Open ViewAccountGUI
+		}
+	}
+
+	@Override
+	public void update(Observable arg0, Object arg1) {
+		
+	}
+	
+	/*
+	 * Used to test panel by creating a new frame and inserting it
+	 */
+	
+	public static void main(String[] args) {
+		JFrame frame = new JFrame("Contacts Demo");
+		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		 
+	        //Add content to the window.
+	        frame.add(new ProfilePanel());
+	 
+	        //Display the window.
+	        frame.pack();
+	        frame.setVisible(true);
+	}
+
+}

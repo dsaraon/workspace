@@ -1,0 +1,143 @@
+package server;
+
+import general.Account;
+import general.Chat;
+import general.ChatMessage;
+
+import java.sql.SQLException;
+import java.util.ArrayList;
+
+import database.Queries;
+
+public class GUITestDatabase implements Queries {
+
+	@Override
+	public void login(String username, String password) throws SQLException,
+			Exception {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public boolean usernameFree(String username) throws SQLException, Exception {
+		if(username.equals("fail")) {return false;}
+		return true;
+	}
+
+	@Override
+	public void createAccount(Account account) throws SQLException, Exception {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public Account getAccount(String username) throws SQLException, Exception {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public ArrayList<String> allUsers() throws SQLException, Exception {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Chat createPrivateChat(String username1, String username2)
+			throws SQLException, Exception {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Chat createTeam(String teamName, ArrayList<String> usernames)
+			throws SQLException, Exception {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public void savePrivateMessage(ChatMessage chatMessage)
+			throws SQLException, Exception {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void saveTeamMessage(ChatMessage chatMessage) throws SQLException,
+			Exception {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public ArrayList<String> chatMember(int chatID) throws SQLException,
+			Exception {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public ArrayList<String> teamMembers(int teamID) throws SQLException,
+			Exception {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public void setDeliveredPrivate(int chatID, String username)
+			throws SQLException, Exception {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void setDeliveredTeam(int teamID, String username)
+			throws SQLException, Exception {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public ArrayList<ChatMessage> getHistoryPrivate(int chatID)
+			throws SQLException, Exception {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public ArrayList<ChatMessage> getHistoryTeam(int teamID)
+			throws SQLException, Exception {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public void addUser(String username, int teamID) throws SQLException,
+			Exception {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void removeUser(String username, int teamID) throws SQLException,
+			Exception {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public ArrayList<Chat> getChats(String username) throws SQLException,
+			Exception {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public ArrayList<Chat> getTeams(String username) throws SQLException,
+			Exception {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+}

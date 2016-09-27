@@ -1,0 +1,105 @@
+package client;
+
+import java.awt.BorderLayout;
+import java.awt.Dimension;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.net.URL;
+
+import javax.swing.ImageIcon;
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+import javax.swing.JToolBar;
+
+public class ToolbarPanelMainGUI extends JPanel implements ActionListener {
+
+	/**
+	 * Serial Version
+	 */
+	private static final long serialVersionUID = 1L;
+
+	static final private String MAIN_MENU = "mainMenu";
+	static final private String LOGOUT= "logout";
+	private Client client;
+
+	public ToolbarPanelMainGUI(Client client ) {
+		setLayout(new BorderLayout()); // Set Layout for Toolbar
+
+		// Create the toolbar
+		JToolBar toolBar = new JToolBar("Main Toolbar");
+		addButtons(toolBar);
+		toolBar.setFloatable(false); // Don't want user dragging it
+
+		this.client = client;
+		// Layout panel
+		setPreferredSize(new Dimension(400, 85));
+		//add(Help.createPicture("devchatlogosmall.png")); // Add logo
+		//add(Help.createPicture("devchatlogosmall.png"), BorderLayout.EAST); // Add logo
+		add(toolBar, BorderLayout.PAGE_START);
+	}
+
+	protected void addButtons(JToolBar toolBar) {
+		JButton button = null;
+
+		// first button
+		button = makeNavigationButton("devchatlogosmall.png", MAIN_MENU,
+				"Main Menu", "Main Menu");
+		toolBar.add(button);
+		
+		// second button
+		button = makeNavigationButton("logout.png", LOGOUT,
+				"Logout", "Logout");
+		toolBar.add(button);
+	}
+
+	protected JButton makeNavigationButton(String imageName,
+			String actionCommand, String toolTipText, String altText) {
+		// Look for the image.
+		String imgLocation = "" + imageName;
+		//String imgLocation = "images/" + imageName;
+		URL imageURL = ToolbarPanelMainGUI.class.getResource(imgLocation);
+
+		// Create and initialize the button.
+		JButton button = new JButton();
+		button.setActionCommand(actionCommand);
+		button.setToolTipText(toolTipText);
+		button.addActionListener(this);
+
+		if (imageURL != null) { // image found
+			button.setIcon(new ImageIcon(imageURL, altText));
+		} else { // no image found
+			button.setText(altText);
+			System.err.println("Resource not found: " + imgLocation);
+		}
+
+		return button;
+	}
+
+	@Override
+	public void actionPerformed(ActionEvent e) {
+		String cmd = e.getActionCommand();
+		
+		switch(cmd){
+		case MAIN_MENU:
+			// Add code for main menu
+			break;
+		case LOGOUT:
+			// Add code for logout
+			client.logout();
+			break;
+		}
+	}
+
+	public static void main(String[] args) {
+//		JFrame frame = new JFrame("Toolbar Demo");
+//		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+//		 
+//	        //Add content to the window.
+//	        frame.add(new ToolbarPanelMainGUI());
+//	 
+//	        //Display the window.
+//	        frame.pack();
+//	        frame.setVisible(true);
+	}
+}

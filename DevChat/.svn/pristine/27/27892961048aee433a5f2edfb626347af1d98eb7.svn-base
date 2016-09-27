@@ -1,0 +1,50 @@
+Diary.
+
+24/02/15
+Full group in attendence. 
+
+ASK CORY : ARE WE ALLOWED TO USE THIRD PARTY API's.
+
+
+Specification:
+
+ - Dev chat.
+
+ - BASE GOAL:	
+        - Build basic messaging system.
+
+ - STRETCH GOALS:
+	- Multiple people in chats
+	- More than one chat open at the same time
+	- Opening links
+	- integrate a similar format to codshare.io.
+	 
+
+ - Need to set out guidelines clearly
+	- Requirements (thinking of user etc)
+	- Information / structure of databases
+	- Communication methods are key.
+
+ - Not number 6 on the spec.
+
+
+ORGANISATION:
+
+ - Team Structure: 
+	(with flexibilty)
+	Harry - GUI.
+	Jess - Client.
+	Divyjyot - Client / GUI (flexy)
+	Sam - JDBC / Databases.
+	Anna - Server/Sockets.
+		
+
+ - Architecture:
+	- Standard.
+	- Model/Client , View/GUI
+	
+	
+ - Protocols 
+	- May be a starting point.
+	- will determine what everything else needs.
+	- will help break into teams.

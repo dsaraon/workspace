@@ -1,0 +1,204 @@
+package client;
+
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.ArrayList;
+import java.util.Observable;
+import java.util.Observer;
+
+import javax.swing.DefaultListModel;
+import javax.swing.DefaultListSelectionModel;
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JList;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
+
+public class ContactsPanel extends JPanel implements Observer, ActionListener, ListSelectionListener {
+	
+	/**
+	 * Serial Version
+	 */
+	private static final long serialVersionUID = 1L;
+	
+	static final private String START_CHAT = "startChat";
+	
+	private Client client; // Declare Model (Backend)
+	
+	// Declare Components
+	JButton startChatButton;
+	JList<String> contactsList;
+	DefaultListModel<String> listModel;
+	
+	// Declare ArrayLists storing contacts
+	ArrayList<String> cList;
+	ArrayList<String> selectedList;
+	
+	//public ContactsPanel(Client client) {
+	public ContactsPanel() {
+		
+		//Create and set up the window.
+		setPreferredSize(new Dimension(200, 400)); // Set Size
+		//setResizable(false);
+		Font font = new Font("Calibri", Font.BOLD, 14); // Default Font
+		//Font font2 = new Font("Calibri", Font.BOLD, 18);
+		
+		// Integrate GUI with backend
+		//this.client = client; 
+		//client.addObserver(this);
+		
+		// Setup Components
+		this.setLayout(new GridBagLayout());
+		GridBagConstraints c = new GridBagConstraints();
+		
+		// Labels
+		JLabel contacts  = new JLabel("<HTML><U>Contacts</U></HTML>", JLabel.LEFT);
+		contacts.setFont(font);
+
+		// Buttons
+		startChatButton = new JButton("Start Chat");
+		startChatButton.setActionCommand(START_CHAT);
+		startChatButton.setToolTipText("Start Chat");
+		startChatButton.addActionListener(this);
+		startChatButton.setEnabled(false);
+		startChatButton.setFont(font);
+		
+		// Setup List
+		cList = new ArrayList<String>();
+		cList.add("Harry Seager");
+		cList.add("Jess Pattison");
+		cList.add("Anna Jackson");
+		cList.add("Tom Jenkins");
+		cList.add("Jordan Kluckow");
+		cList.add("Charlie Edwards");
+		cList.add("Twatting Burbage");
+		listModel = new DefaultListModel<String>();
+		for(String s:cList){
+			listModel.addElement(s);
+		}
+		contactsList = new JList<String>(listModel);
+		contactsList.setFont(font);
+		contactsList.setSelectionModel(new DefaultListSelectionModel() { // Multiple Selection
+		    @Override
+		    public void setSelectionInterval(int index0, int index1) {
+		        if(super.isSelectedIndex(index0)) {
+		            super.removeSelectionInterval(index0, index1);
+		        }
+		        else {
+		            super.addSelectionInterval(index0, index1);
+		        }
+		    }
+		});
+		contactsList.setLayoutOrientation(JList.VERTICAL);
+		//contactsList.setVisibleRowCount(-1); // No effect
+		contactsList.addListSelectionListener(this);
+		JScrollPane listScroller = new JScrollPane(contactsList);
+		listScroller.setPreferredSize(new Dimension(180, 310));
+		
+		// Setup Selected List
+		selectedList = new ArrayList<String>();
+		
+		// Adding Components
+		c.gridx = 0;
+		c.gridy = 0;
+		c.anchor = GridBagConstraints.FIRST_LINE_START;
+		add(contacts, c);
+		
+		c.gridx = 0;
+		c.gridy = 1;
+		c.insets = new Insets(10,0,0,0);
+		c.anchor = GridBagConstraints.PAGE_START;
+		add(listScroller, c);
+		
+		c.gridx = 0;
+		c.gridy = 2;
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.anchor = GridBagConstraints.PAGE_END;
+		add(startChatButton, c);
+		
+		setVisible(true); // Make Frame Visible
+	}
+
+	@Override
+	public void actionPerformed(ActionEvent e) {
+		String cmd = e.getActionCommand();
+		
+		switch(cmd){
+		case START_CHAT:
+			int minIndex = contactsList.getMinSelectionIndex();
+			int maxIndex = contactsList.getMaxSelectionIndex();
+			if(minIndex == maxIndex){
+				client.startPrivateChat(contactsList.getSelectedValue());
+				//NEW PRIVATE CHAT GUI TO BE STARTED HERE WHEN CREATED
+			}else{
+				// Start Team Chat
+				// Below is code to create arraylist of selected contacts
+				for(int i = minIndex; i <= maxIndex; i++){
+					if(contactsList.isSelectedIndex(i)){
+						selectedList.add(cList.get(i));
+					}
+				}
+				// Open NewTeamChatGUI to allow user to select team name
+				NewTeamChatGUI teamChatGUI = new NewTeamChatGUI(selectedList);//should this pass the array?
+			}
+			
+			/*// Used to test whether arraylist works
+			StringBuffer selectedContacts = new StringBuffer();
+			for(String s:selectedList){
+				selectedContacts.append(s + ", ");
+			}
+			JOptionPane.showMessageDialog(this, selectedContacts.toString());
+			*/
+			contactsList.clearSelection();
+		}
+	}
+
+	@Override
+	public void update(Observable arg0, Object arg1) {
+		
+	}
+	
+	/**
+	 * Once a selection is made the below method is fired
+	 */
+	
+	@Override
+	public void valueChanged(ListSelectionEvent e) {
+	    if (e.getValueIsAdjusting() == false) {
+
+	        if (contactsList.getSelectedIndex() == -1) {
+	        //No selection, disable start chat button.
+	        	startChatButton.setEnabled(false);
+
+	        } else {
+	        //Selection, enable the start chat button.
+	        	startChatButton.setEnabled(true);
+	        }
+	    }
+	}
+	
+	/*
+	 * Used to test panel by creating a new frame and inserting it
+	 */
+	
+	public static void main(String[] args) {
+		JFrame frame = new JFrame("Contacts Demo");
+		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		 
+	        //Add content to the window.
+	        frame.add(new ContactsPanel());
+	 
+	        //Display the window.
+	        frame.pack();
+	        frame.setVisible(true);
+	}
+
+}

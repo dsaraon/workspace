@@ -1,0 +1,349 @@
+Diary.
+-------------------------------------------------------------------------------------------------------------------------------------
+24/02/15
+-------------------------------------------------------------------------------------------------------------------------------------
+TEAM MEETING: Full group in attendance. 
+
+ASK CORY : ARE WE ALLOWED TO USE THIRD PARTY API'S - (Update: Completed 26/02 - YES).
+
+Specification:
+--------------
+ - Dev chat.
+ - BASE GOAL:	
+        - Build basic messaging system.
+ - STRETCH GOALS:
+	- Multiple people in chats
+	- More than one chat open at the same time
+	- Opening links
+	- integrate a similar format to codshare.io.
+ - Need to set out guidelines clearly
+	- Requirements (thinking of user etc)
+	- Information / structure of databases
+	- Communication methods are key.
+ - Not number 6 on the spec.
+
+ORGANISATION:
+--------------
+ - Team Structure: 
+	(with flexibilty)
+	Harry - GUI. Jess - Client. Divyjyot - Client / GUI (flexy) Sam - JDBC / Databases. Anna - Server/Sockets.
+
+ - Architecture:
+	- Standard.
+	- Model/Client , View/GUI	
+	
+ - Protocols 
+	- May be a starting point.
+	- will determine what everything else needs.
+	- will help break into teams.
+---------------------------------------------------------------------------------------------------------------------------------
+26/02/15
+---------------------------------------------------------------------------------------------------------------------------------
+
+MEETING WITH CORY:Full group in attendance.
+-------------------------------------------- 
+- Most of our current stretch goals should be basic goals. Only stretch goals 
+  at the moment are code/ pictures (but if we can achieve the code bit we are awesome)
+- WARNING: Links may have problems working across different OSs.
+- Mention about work history / write work flow.
+- Text, Login, Instructions. Work on protocol, what will be sent across with each message?
+- Have a clear goal of how different parts are communicating/ how things are sent between elements. 
+	(Update - conducted meetings)
+- getChatHistory()
+- THERE SHOULD NEVER BE A BARE DB CALL IN PROGRAM.
+- HANDLERS - these will be important for making sure when we add functionality nothing goes wrong.
+- Get a skeleton uploaded for next Thursday/Friday. (For Handlers or for methods. Having communication between 
+  Client and Server implemented).
+
+
+TEAM MEETING: Full group in attendance. 
+-----------------------------------------
+Organisation:
+---------------
+- Conduct separate meetings to figure out protocols/ what is needed to be communicated between different areas.
+	- Weekend: Divyjyot and Anna to discuss Server/Client.
+	- Monday: Anna & Sam to discuss Server/DB, Sam & Jess to discuss DB/Client
+
+Architecture:
+---------------
+- How information was to be organised an sent/recieved:
+	Sending Stuff - Sending Java objects? Object to be sent from Client to Server - Server deconstructs to send to SQL.
+	This avoids the issues that Threads do not send stuff in an order.
+
+Database:
+-----------
+	- Within DB side can create paired statements - SQL query with ? for bits you want to change.
+	- DB Class with methods to Call. 
+	- Will store time stamp for messages to help order them.
+
+Chat issues:
+-------------
+- Discussed how we were going to arrange the "responsibility of chats". This was important as we wanted to be 
+  able to keep DevChats open after one person left. It raised issues of ownership and of privacy (i.e. if someone 
+  was to join would they see teh previous conversation etc.).
+
+	- We are going to attempt to make two categories of chat messages - private and DevChat
+	- Private chats will be between two people. Only those two people will be able to access chat history.
+	- DevChats will be between 3+ people. Chat history will be open for searching.
+	- For each chat, each time a person joins or goes, it makes a different chat ID. 
+	- A chat history will be saved an relayed between two people. If another person joins, from then on it is 
+	  saved as a DevChat with a separate ID. This should mean if two people are chatting and a third is added, 
+	  it will become a DevChat and the previous history of the  original two will not be shown.
+	- To achieve this, if a DevChat is started (more than 1 person added to a conversation) the chat will open 
+	  in a new window.
+	- Privacy for DevChats shouldn't be an issue as the program is designed for a professional network and is 
+	  designed to work inhouse.
+	
+Possible Stretch Goals:
+------------------------
+	- GUI: different colours for the two types of chat.
+	- Being able to hide messages?
+	
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+28/02/15
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Anna/Divyjyot uploaded to SVN:
+------------------------------
+	- An initial Java version of the protocol
+	- Text version of the protocol
+	- Some classes necessary for writing protocol but currently don't do anything
+	- A text file containing some design issues we need to discuss.
+
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+02/02/15
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Sam/Jess Meeting: 
+-----------------
+
+DEVCHAT QUESTIONS:
+---------------------
+DevChat for each team? But then what about cross team communication / access?
+Chat rooms seems to be best for DevChat otherwise multiple windows will have to be opened.
+
+GUI considerations:
+-------------------
+- Search boxes (language, username, department(?))
+- Search by date for DevChat.
+- Profile - Separate screen, hover over to get box, right click to get profile??
+- Chat rooms for DevChat? 
+- Set up a DevChat, enter team ID, team name.
+	- need separate admin screen.
+- Maybe an opening screen with options (I.e Start Private Chat, Start DevChat, Search
+	For Chat, Admin Options, Edit Profile).
+
+Client: 
+-------
+- Admin methods.
+- Customisable - setting methods (colour etc)?
+
+Objects server to client:
+--------------------------
+ - basic information object
+ - Should we limit group size for DevChat?
+ - Need to make USER object
+
+Connection Errors:
+-------------------
+-If connection drops out for short period so message can't be sent - error or try again y/n?
+Re-establishing connection protocol. - need something in server to check if their online.
+
+Privacy and Login:
+-------------------
+- user_ID never visible to user, username would be visible.
+- LOGIN: create new user object with ______. See if it matches what's on database.
+
+---------------------------------------------------------------------------------------------------------------------------------
+03/03/15
+---------------------------------------------------------------------------------------------------------------------------------
+
+- Full group in attendance
+- Jessica made permanent Secretary
+
+DevChat:
+------------------
+- DevChat as Chat Room.
+- Keep Private Chat and DevChat completely separate 
+- Set colour for private and another for DevChat.
+
+IDs:
+------
+
+- Associate session ID with User ID? or Server sends session ID to Client?:
+	- Each thread in Client will need an ID. (Number to ID thread and ID message)
+	- Server can send those two numbers to confirm.
+
+If someone goes offline/Offline messaging:
+-------------------------------------------
+- When they reconnect will automatically appear as the message will be written to the
+  database and then sent to the other client.
+- Need a way for the Client to recognise there has been a connection error? Need to catch 
+  end of file exception.
+
+- Time stamp as Date type.
+- Record sending time (because multithreaded). Keep the chronology related to the Client
+- As writing messages to the database, it means messages can be sent when users are "offline"
+- Boolean T/F for if someone is in a chat. "Some messages haven't been seen" rather than saying 
+  which hasn't been seen.
+
+Account Class:
+-----------------
+- Languages
+- Username
+- Password
+
+- Client needs to ensure nothing invalid gets passed to DB.
+
+
+Agreed Basic:
+----------------
+
+GUI:
+-----
+- Display/Receive/Send 
+
+
+Client:
+-------
+- Connect to Server
+- Send messages to Server
+- Hard code: Thread ID and Chat ID.
+
+Server to DB:
+-------------
+- Add Messages
+- Retrieve Messages.
+- Server stores messages in lookup tables.
+
+Connections:
+------------
+Client <=> GUI
+Client <=> Server
+Server <=> DB
+
+Test Plan
+----------
+
+- Each team write their manual test, then swap with other team for additional tests.
+
+Packages:
+---------
+- One for each section
+- Classes which are shared - 
+- Messages class - comparator method which sorts by timestamp.
+
+What does an Account have:
+---------------------------
+- AccountID ==> Client gets from DB
+- User ID
+- Password
+- Email
+- Languages
+- Location 
+- Company
+- Job title
+- FName
+- LName
+- Profile (Stretch: to be able to update).
+
+Set Work for next meeting:
+--------------------------
+- Skeleton for GUI, Client & Server by 05/03.
+
+
+------------------------------------------------------------------------------------------------------------------------------------
+10/03/15
+------------------------------------------------------------------------------------------------------------------------------------
+
+Agenda and discussion points for meeting (Tuesday 10th March)
+--------------------------------------------------------------
+
+Structure of Client
+--------------------
+	- Threads
+	----------
+		 => needs to be multi-threaded.
+		 => Client and GUI will be observable and runnable. GUI will have 
+		    the main and the client will have a run() class.
+		 => Main Client has a lot of field variables. 
+		 	- All threads have access too and write to the  queue
+			- Map of chat objects.
+		=> GUI needs to be threaded.
+		
+	- Responses
+	------------
+		- Each ChatWindow has a queue for receiving messages.
+		- ISSUE: Don't know when you are getting a message back. ==> REQUEST CLASS
+		  The Request Class has one method response. 
+			  
+		 0 - Server 1 - Main Class i - Chat window.
+	
+	- Observable and Runnable
+	---------------------------
+		- Client updates GUI by notifying of observable.	
+		- Protocol based around the GUI message class.
+		- Structure is designed to be scalable. 
+		
+		
+Structure of GUI
+-----------------
+	- Define exactly the role of the GUI
+	----------------------------------------
+		- Harry has notes on this.
+	
+	- Running and communicating with the client and chat windows
+	-------------------------------------------------------------------
+		- View Class - need to run in thread and start a thread for a chat window.
+	 		- may need runnable WindowView class for chat windows.
+	 			- Set<Thread>
+	 			- new Thread(new WindowView(Object));
+		- Client
+		- Thread Client
+	
+	- Threads
+	-----------
+	
+	
+Issues which I need to think more about!
+------------------------------------------
+	- Delivered/undelivered messages- retrieving undelivered messages
+	- Closing the system
+	- reconnecting to the system
+
+Errors/Verification
+---------------------
+	- Error messages- let's programme as though everything will always work and think
+	about this on Thursday
+	- Because of model view separation, the client must check that all information
+	entered is correct and inform the GUI if it isn't- but this comes under error messages
+
+
+Work to do:
+------------
+- GUI:
+	- sketched out design of the various frames/panels- where will the all
+	the methods be called from? How will the transitions work?
+		- Harry and Divyjyot - above.
+- Client:
+	- implement method stubs
+		- Jess : Chat Window implementation.
+		- Anna : Methods.
+- Server/DB:
+		- Sam.
+	- update for new version of queries
+	- discuss team chats
+	- discuss errors
+	- (start testing)
+
+
+Provisional deadlines:
+
+- Thursday 12th:
+	- as much of the above as possible (we need enough time for it to all not work
+	and to fix it!)
+- Tuesday 17th:
+	- most, if not all of the programming
+- Thursday 19th
+	- all testing
+
+This leaves us with the weekend to write the report

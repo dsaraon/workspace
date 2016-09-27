@@ -1,0 +1,161 @@
+package client;
+
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.util.ArrayList;
+import java.util.Observable;
+import java.util.Observer;
+
+import javax.swing.DefaultListModel;
+import javax.swing.DefaultListSelectionModel;
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JList;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.ListSelectionModel;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
+
+public class InboxPanel extends JPanel implements Observer, MouseListener {
+	
+	/**
+	 * Serial Version
+	 */
+	private static final long serialVersionUID = 1L;
+	
+	//private Client client; // Declare Model (Backend)
+	
+	// Declare Components
+	JList<String> inboxList;
+	DefaultListModel<String> listModel;
+	
+	// Declare ArrayLists storing inbox messages
+	ArrayList<String> cList;
+	
+	//public InboxPanel(Client client) {
+	public InboxPanel() {
+		
+		//Create and set up the window.
+		setPreferredSize(new Dimension(400, 515)); // Set Size
+		//setResizable(false);
+		Font font = new Font("Calibri", Font.BOLD, 14); // Default Font
+		Font font2 = new Font("Calibri", Font.BOLD, 18);
+		
+		// Integrate GUI with backend
+		//this.client = client; 
+		//client.addObserver(this);
+		
+		// Setup Components
+		this.setLayout(new GridBagLayout());
+		GridBagConstraints c = new GridBagConstraints();
+		
+		// Labels
+		JLabel inbox  = new JLabel("<html><u>Inbox</u></html>", JLabel.LEFT);
+		inbox.setFont(font2);
+
+		// Setup List
+		cList = new ArrayList<String>();
+		cList.add("<html><u><font color=red>Harry Seager</u><br>Hey harry, How's it going?</br></font></html>");
+		cList.add("<html><u><font color=blue>DevChat Team</u><br>We hate you</br></font></html>");
+		cList.add("<html><u><font color=red>Anna Jackson</u><br>Don't forget it's mothers day</br></font></html>");
+		listModel = new DefaultListModel<String>();
+		for(String s:cList){
+			listModel.addElement(s);
+		}
+		inboxList = new JList<String>(listModel);
+		inboxList.setFont(font);
+		inboxList.setLayoutOrientation(JList.VERTICAL);
+		inboxList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+		//contactsList.setVisibleRowCount(-1); // No effect
+		//inboxList.addListSelectionListener(this);
+		JScrollPane listScroller = new JScrollPane(inboxList);
+		listScroller.setPreferredSize(new Dimension(400, 480));
+		
+		// Adding Components
+		c.gridx = 0;
+		c.gridy = 0;
+		c.anchor = GridBagConstraints.FIRST_LINE_START;
+		add(inbox, c);
+		
+		c.gridx = 0;
+		c.gridy = 1;
+		c.insets = new Insets(10,0,0,0);
+		c.anchor = GridBagConstraints.PAGE_START;
+		add(listScroller, c);
+		
+		//MOUSELISTENER NEEDS TO BE REGISTERED TO WORK
+		addMouseListener(this);
+		inboxList.addMouseListener(this);
+		
+		setVisible(true); // Make Frame Visible
+	}
+
+	@Override
+	public void update(Observable arg0, Object arg1) {
+		
+	}
+	
+	@Override
+	public void mouseClicked(MouseEvent e){
+		// Define Double Click Event
+		 
+        if (e.getClickCount() == 2 && !e.isConsumed()) {
+        	e.consume();
+            //IF double click happens 
+            //open chat window AND POPULATE IT WITH CHATHISTORY
+            PrivateChatGUI chat = new PrivateChatGUI();
+
+        }
+	}
+
+	@Override
+	public void mouseEntered(MouseEvent arg0) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void mouseExited(MouseEvent arg0) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void mousePressed(MouseEvent arg0) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void mouseReleased(MouseEvent arg0) {
+		// TODO Auto-generated method stub
+		
+	}
+	
+	/*
+	 * Used to test panel by creating a new frame and inserting it
+	 */
+	
+	public static void main(String[] args) {
+		JFrame frame = new JFrame("Contacts Demo");
+		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		 
+	        //Add content to the window.
+	        frame.add(new InboxPanel());
+	 
+	        //Display the window.
+	        frame.pack();
+	        frame.setVisible(true);
+	}
+
+}

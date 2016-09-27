@@ -1,0 +1,173 @@
+package client.gui;
+import general.ChatMessage;
+import general.Message;
+
+import java.awt.Dimension;
+import java.awt.FlowLayout;
+import java.awt.Font;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
+import java.util.Observable;
+import java.util.Observer;
+
+import javax.imageio.ImageIO;
+import javax.swing.BoxLayout;
+import javax.swing.ImageIcon;
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JPasswordField;
+import javax.swing.JTextField;
+import javax.swing.UIManager;
+import javax.swing.UnsupportedLookAndFeelException;
+
+import client.Client;
+import client.GUIMessage;
+
+
+public class LoginGUI extends JFrame implements Observer, ActionListener {
+	
+	/**
+	 * Serial Version
+	 */
+	private static final long serialVersionUID = 1L;
+	
+	static final private String LOGIN = "login";
+	static final private String CREATE_ACCOUNT= "createAccount";
+
+	// Add a Model
+	private Client client; // Declare Model (Backend)
+	
+	// Set up Fonts
+	Font font = new Font("Calibri", Font.BOLD, 18);
+	
+	// Setup Main Panel
+	JPanel main = new JPanel();
+	
+	// Set up Row 1 - Picture
+	JPanel row1 = new JPanel();
+	
+	// Set up Row 2 - Username
+	JPanel row2 = new JPanel();
+	JLabel userNameLabel = new JLabel("User Name:", JLabel.RIGHT);
+	JTextField userName = new JTextField();
+	
+	// Set up Row 3 - Password
+	JPanel row3 = new JPanel();
+	JLabel passWordLabel = new JLabel("Password:", JLabel.RIGHT);
+	JPasswordField passWord = new JPasswordField();
+	
+	// Set up Row 4 - Buttons
+	JPanel row4 = new JPanel();
+	JButton signInButton = new JButton("Sign In"); // Sign in button
+	JButton createAccountButton = new JButton("Create Account"); // Create Account button
+	
+	/**
+	 * Constructor for GUI
+	 * @param client - Backend driving the output
+	 */
+	
+	public LoginGUI(Client client) {
+		super("DevChat"); // Create new Frame with title
+		this.client = client; // Integrate GUI with backend
+		client.addObserver(this); // Setup observer with observable
+		setSize(250, 450); // Set Size
+		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE); // Close Operation
+		setResizable(false); // Make it so user cannot resize
+		main.setLayout(new BoxLayout(main, BoxLayout.Y_AXIS)); // Set Layout
+		
+		// Setup Row 1 - Logo
+		row1.add(Help.createPicture("devchatlogo.png")); // Add logo
+		main.add(row1);
+		
+		// Setup Row 2 - Username
+		row2.add(userNameLabel);
+		row2.add(userName);
+		userNameLabel.setFont(font);
+		userName.setFont(font);
+		userName.setPreferredSize(new Dimension(200,26));
+		main.add(row2);
+		
+		// Setup Row 3 - Password
+		row3.add(passWordLabel);
+		row3.add(passWord);
+		passWordLabel.setFont(font);
+		passWord.setFont(font);
+		passWord.setPreferredSize(new Dimension(200,26));
+		main.add(row3);
+		
+		// Setup Row 4 - Sign In & Create Account Buttons
+		// Sign In Button
+		signInButton.setActionCommand(LOGIN);
+		signInButton.setToolTipText("Sign In");
+		signInButton.addActionListener(this);
+		signInButton.setFont(font);
+		row4.add(signInButton);
+		
+		// Create Account Button
+		createAccountButton.setActionCommand(CREATE_ACCOUNT);
+		createAccountButton.setToolTipText("Create New Account");
+		createAccountButton.addActionListener(this);
+		createAccountButton.setFont(font);
+		row4.add(createAccountButton);
+		
+		main.add(row4);
+		
+		add(main); // Add Main Panel to Frame
+		setVisible(true); // Make Frame Visible
+	}
+	
+	@Override
+	public void actionPerformed(ActionEvent e) {
+		String cmd = e.getActionCommand();
+		
+		switch(cmd){
+		case LOGIN:
+			client.login(userName.getText(), passWord.getText());//should use getPassword() instead
+			break;
+		case CREATE_ACCOUNT:
+			 CreateAccountGUI create = new CreateAccountGUI();//add client as parameter
+			//will this start from the View class instead? 
+			break;
+		}
+	}
+
+	@Override
+	public void update(Observable o, Object arg) {
+		if (o instanceof Client) {
+			GUIMessage message = (GUIMessage)arg;
+			switch(message.getStatus()){
+			case LOGGED_IN:
+				setVisible(false);
+				// or frame.dispatchEvent(new WindowEvent(frame, WindowEvent.WINDOW_CLOSING));
+				MainGUI main = new MainGUI();//add client as parameter 
+				break;
+			case LOGIN_FAIL:
+				userName.setText("");
+				passWord.setText("");
+				JOptionPane.showMessageDialog(this,//use rootPane instead?
+					    "You shall not pass!",
+					    "Invalid error",
+					    JOptionPane.ERROR_MESSAGE);
+				break;
+			}
+        }
+		
+	}
+	
+	public static void main(String[] args) {
+
+//		Client client = new Client();
+//		LoginGUI test = new LoginGUI(client); // Start GUI
+
+//		Client client = new Client();
+//		LoginGUI test = new LoginGUI(); // Start GUI
+
+	}
+
+}

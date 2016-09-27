@@ -1,0 +1,927 @@
+package client;
+/**
+ * @author Jessica White
+ * @author Divyjyot Saraon
+ * @author Anna Jackson
+ */
+import general.*;
+import general.Message.Status;
+import client.ChatWindow;
+
+import java.io.*;
+import java.net.Socket;
+import java.net.SocketException;
+import java.util.*;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.regex.Pattern;
+
+/*
+ * TO DO: logout and shutting chat windows, error handling, catch socket exceptions
+ */
+public class Client extends Observable implements ClientGUIProtocol {
+		
+		private String host; //saved for reconnecting
+		private int portNumber;
+		private Socket clientSocket;
+		private ObjectOutputStream out;
+		private ObjectInputStream in;
+		private Thread readerThread;
+		private Thread writerThread;
+		protected String username;
+		protected LinkedBlockingQueue<Message> incomingMessages; //the readerThread puts messages with threadID 0 and 1 here
+		protected LinkedBlockingQueue<Message> outgoingMessages; //all threads in the client put their outgoing messages on this queue
+		protected Map<Integer, Request> requests;
+		protected Map<Integer, ChatWindow> currentChats; //maps chatIDs to chats (both private and team)
+		protected Map<Integer, Integer> chat2ThreadID; //sync these too
+		protected Map<Integer, Integer> team2ThreadID;
+		protected Integer threadCounter;
+		protected Integer messageCounter;
+		protected Map<Integer, Chat> allPrivateChats; //chats already stored in the DB SYNC TOO?
+		protected Map<Integer, Chat> allTeamChats; //teams already stored in the DB SYNC TOO?
+		protected boolean stop;
+		protected boolean exit;
+		protected ArrayList<String> allUsers;
+
+		/** Client Constructor.
+		 * @param host - IP
+		 * @param portNumber- portNumber
+		 * @param username - of person logged into chat.
+		 */
+		public Client(String host, int portNumber){
+			this.host = host;
+			this.portNumber = portNumber;
+			incomingMessages = new LinkedBlockingQueue<Message>();
+			requests = new HashMap<Integer, Request>();
+			messageCounter = 0;
+			threadCounter = 2;
+			stop = false;
+			exit = false;
+			start(host, portNumber);
+		}
+		
+		//methods called by the constructor
+		
+		/**
+		 * Start up everything needed for Client to work
+		 * @param host - same as before
+		 * @param portNumber - same as before.
+		 */
+		private void start(String host, int portNumber){
+			boolean network = false;
+			while(!network) { //keep trying until it works
+				System.out.println("connecting to server");
+				network = setupNetwork(host, portNumber);
+			}
+			setupWriter();
+			setupReader();
+		}
+		
+		/**
+		 * Sets up the communication with the Server.
+		 * @param host
+		 * @param portNumber
+		 * @return true if connection established
+		 */
+		private boolean setupNetwork(String host, int portNumber) {
+			//connecting with the server -   remove print statements later
+			try {
+				clientSocket = new Socket(host, portNumber);
+				System.out.println("socket");
+			    out = new ObjectOutputStream(clientSocket.getOutputStream());
+			    out.flush();
+			    System.out.println("output");
+				in = new ObjectInputStream(clientSocket.getInputStream());
+				System.out.println("input");
+				return true;
+			} catch(IOException e){
+				return false;
+			}
+		}
+		
+		private void setupReader() {
+			readerThread = new Thread(new IncomingReader());
+			readerThread.start();
+		}
+		
+		private void setupWriter() {
+			outgoingMessages = new LinkedBlockingQueue<Message>();
+			writerThread = new Thread(new OutgoingWriter());
+			writerThread.start();
+		}
+		
+		/**
+		 * Checks continuously for messages on the socket input stream and processes them appropriately.
+		 *	Attempts to reconnect to the server if connection is lost
+		 */
+		public void run() {
+			while (!exit) {
+				while(!stop) { //stop ensures that if one thread has an error, the whole client reconnected
+					try {
+						while (!stop && incomingMessages.isEmpty()) {}
+						if (!stop) {
+							Message message = incomingMessages.take();
+							if (message.getThreadID() == 0) {
+								processServerMessage(message);
+							} else { //message.getThreadID() == 1
+								int messageID = message.getMessageID();
+								requests.get(messageID).respond(message); //perform the specified response action
+								requests.remove(messageID); //delete the request
+							}
+						}
+					} catch (InterruptedException e) { //INTERRUPTED WHEN THE USER WANTS TO SHUT DOWN
+						//System.out.println("EXIT");
+						exit();
+					}
+					//System.out.println("loop");
+				}
+				if (!exit) { //if exit is true, the while loop will finish and the thread terminate
+					//System.out.println("trying to reconnect");
+					logoutHelper();
+					updateGUI(GUIMessage.Status.LOGOUT, null);
+					updateGUI(GUIMessage.Status.DISCONNECTED, null);
+					//will need to login back in again!!!
+					try {
+						Thread.sleep(2000);
+						stop = false;
+						start(host, portNumber); //reconnect
+						updateGUI(GUIMessage.Status.CONNECTED, null);
+					} catch (InterruptedException f) {
+						exit();
+					}
+				}
+			}
+
+		}
+		
+
+		
+		/**
+		 * ensures that if one thread stops, all threads stop
+		 */
+		public synchronized void stop(){
+			System.out.println("stop");
+			stop = true;
+		}
+		
+		/**
+		 * closes the connection to the server
+		 */
+		protected synchronized void exit() {
+			stop = true;
+			exit = true;
+			try {
+				Thread.sleep(1000);
+				clientSocket.close();
+			} catch (IOException | InterruptedException e) {
+				//TODO should something be here?!
+			}	
+		}
+		
+		/**
+		 * adds a chatwindow to current chats
+		 * @param threadID
+		 * @param chatWindow
+		 */
+		protected synchronized void addCurrentChat(Integer threadID, ChatWindow chatWindow) {
+			currentChats.put(threadID, chatWindow);
+		}
+		
+		/**
+		 * removes a chat window from current chats
+		 * @param threadID
+		 */
+		protected synchronized void removeCurrentChat(Integer threadID) {
+			currentChats.remove(threadID);
+			//find thread in chat2ThreadID or team2ThreadID
+			if (chat2ThreadID.containsValue(threadID)) {
+				for (Map.Entry<Integer, Integer> entry: chat2ThreadID.entrySet()) {
+					if (entry.getValue().equals(threadID)) {
+						chat2ThreadID.remove(entry.getKey());
+					}
+				}
+			} else {
+				for (Map.Entry<Integer, Integer> entry: team2ThreadID.entrySet()) {
+					if (entry.getValue().equals(threadID)) {
+						team2ThreadID.remove(entry.getKey());
+					}
+				}
+			}
+		}
+		
+		/**
+		 * forwards a receive private message request to the relevant chat window if open
+		 * @param chatID
+		 * @param message
+		 * @return
+		 * @throws InterruptedException
+		 */
+		private synchronized boolean forwardMessagePrivate(int chatID, Message message) throws InterruptedException {
+			int threadID = chat2ThreadID.getOrDefault(chatID, -1); //definitely won't be in current chats if default
+			if (currentChats.containsKey(threadID)) { //forward the message
+				currentChats.get(threadID).receiveMessage(message);
+				return true;
+			} else {
+				return false;
+			}
+		}
+		
+		/**
+		 * forwards a receive private message request to the relevant chat window if open
+		 * @param teamID
+		 * @param message
+		 * @return
+		 * @throws InterruptedException
+		 */
+		private synchronized boolean forwardMessageTeam(int teamID, Message message) throws InterruptedException {
+			int threadID = team2ThreadID.getOrDefault(teamID, -1); //definitely won't be in current chats if default
+			if (currentChats.containsKey(threadID)) { //forward the message
+				currentChats.get(threadID).receiveMessage(message);
+				return true;
+			} else {
+				return false;
+			}
+		}
+		
+		/**
+		 * forwards a server response to the relevant chatwindow, if open
+		 * @param threadID
+		 * @param message
+		 * @throws InterruptedException
+		 */
+		private synchronized void forwardMessage(int threadID, Message message) throws InterruptedException {
+			if (currentChats.containsKey(threadID)) {
+				currentChats.get(threadID).receiveMessage(message);
+			}
+		}
+		
+		/**
+		 * @param chatID
+		 * @return the private chat whose ID is chatID
+		 */
+		private synchronized Chat getPrivateChat(int chatID) {
+			return allPrivateChats.get(chatID);
+		}
+		
+		/**
+		 * 
+		 * @param teamID
+		 * @return the team chat whose ID is teamID
+		 */
+		private synchronized Chat getTeamChat(int teamID) {
+			return allTeamChats.get(teamID);
+		}
+		
+		/**
+		 * adds a new chat to the local record of all private chats
+		 * @param chat
+		 */
+		private synchronized void addAllPrivateChats(Chat chat) {
+			if (!allPrivateChats.containsKey(chat.getID())) {
+				allPrivateChats.put(chat.getID(), chat);
+			}
+		}
+		
+		/**
+		 * adds a new chat to the local record of all team chats
+		 * @param chat
+		 */
+		private synchronized void addAllTeamChats(Chat chat) {
+			if (!allTeamChats.containsKey(chat.getID())) {
+				allTeamChats.put(chat.getID(), chat);
+			}
+		}
+		
+		
+		/**
+		 * @return threadCounter, then increments it by 1
+		 */
+		private synchronized int incrementThreadID() {
+			return threadCounter++;
+		}
+		
+		/** 
+		 * @return messageCounter, then increments it by 1
+		 */
+		private synchronized int incrementMessageID() {
+			return messageCounter++;
+		}
+		
+		/**
+		 * parses a server message and calls the appropriate method for its status
+		 * @param message
+		 */
+		private void processServerMessage(Message message) {
+			Message.Status status = message.getStatus();
+			if (status == Message.Status.JOIN_CHAT) {
+				joinChat(message);
+			} else if (status == Message.Status.JOIN_TEAM) {
+				joinTeam(message);
+			} else if (status == Message.Status.LEAVE_TEAM) {
+				leaveTeam(message);
+			} else if (status == Message.Status.RECEIVE_PRIVATE_MESSAGE) {
+				receivePrivateMessage(message);
+			} else if (status == Message.Status.RECEIVE_TEAM_MESSAGE) {
+				receiveTeamMessage(message);
+			} else if (message.getStatus() == Message.Status.ADD_TEAM_MEMBER) {
+				addTeamMember(message);
+			} else if (message.getStatus() == Message.Status.REMOVE_TEAM_MEMBER) {
+				removeTeamMember(message);
+			}
+		}
+		
+		/*
+		 * The following methods respond to communication by the server
+		 */
+		
+		/**
+		 * adds the user to a private chat and opens a chat window
+		 * @param message
+		 */
+		private void joinChat(Message message) {
+			Chat chat = (Chat)message.getObjects()[0];
+			addAllTeamChats(chat);
+			getPrivateChats(username);
+			//updateGUI(GUIMessage.Status.JOIN_CHAT, chat); maybe not needed
+			makeWindow(chat); //method written so that this can be called even if a chat already exists
+		}
+		
+		/**
+		 * adds the user to a team and opens a chat window
+		 * @param message
+		 */
+		private void joinTeam(Message message) {
+			Chat chat = (Chat)message.getObjects()[0];
+			addAllTeamChats(chat);
+			getTeamChats(username);
+			//updateGUI(GUIMessage.Status.JOIN_TEAM, chat); maybe not needed
+			makeWindow(chat); //method written so that this can be called even if a chat already exists
+		}
+		
+		/**
+		 * removes the user from a team and closes chat window if open
+		 * @param message
+		 */
+		private synchronized void leaveTeam(Message message) {
+			System.out.println("leave team");
+			int teamID = (int)message.getObjects()[0];
+			int threadID = team2ThreadID.getOrDefault(teamID, -1);
+			//updateGUI(GUIMessage.Status.EXIT_TEAM, allTeamChats.get(teamID)); maybe not needed
+			getTeamChats(username);
+			allTeamChats.remove(teamID); //make boolean and forget rest if not there??
+			try {
+				forwardMessageTeam(teamID, message);
+			} catch (InterruptedException e){
+				//annnd??
+			}
+			//remove from current chats- done by chat window
+			if (threadID != 1) {
+				updateGUI(GUIMessage.Status.LEAVE_TEAM, threadID);
+			}
+		}
+				
+		/**
+		 * forwards a new private message to be displayed by a chat window,
+		 * or opens a new chat window if needed
+		 * @param message
+		 */
+		private synchronized void receivePrivateMessage(Message message) {
+			ChatMessage chatMessage = (ChatMessage) message.getObjects()[0];
+			int chatID = chatMessage.getID();
+			boolean chatWindowOpen = chat2ThreadID.containsKey(chatID);
+			if (!chatWindowOpen) {
+				Chat chat = getPrivateChat(chatID);
+				openChatWindow(chat);
+			} else {
+				try {
+					forwardMessagePrivate(chatID, message);
+				} catch (InterruptedException e) {
+					displayError("unable to receive private message");
+				}
+			}
+
+		}
+		
+		/**
+		 * forwards a new team message to be displayed by a chat window,
+		 * or opens a new chat window if needed
+		 * @param message
+		 */
+		private void receiveTeamMessage(Message message) {
+			ChatMessage chatMessage = (ChatMessage) message.getObjects()[0];
+			int teamID = chatMessage.getID();
+			boolean chatWindowOpen = team2ThreadID.containsKey(teamID);
+			if (!chatWindowOpen) {
+				Chat chat = getTeamChat(teamID);
+				openChatWindow(chat);
+			} else {
+				try {
+					forwardMessageTeam(teamID, message);
+				} catch (InterruptedException e) {
+					displayError("unable to receive team message");
+				}
+
+			}
+			
+		}
+		
+		
+		/**
+		 * updates local chat record and forwards message to relevant ChatWindow if one exists
+		 * @param message
+		 */
+		private void addTeamMember(Message message) {
+			int teamID = ((Chat)message.getObjects()[0]).getID();
+			String username = (String)message.getObjects()[1];
+			getTeamChat(teamID).addUsername(username); //make add user to team
+			Chat chat = getTeamChat(teamID);
+			try {
+				forwardMessageTeam(teamID, message);
+			} catch (InterruptedException e) {
+				displayError("Unable to update chat window with new team member");
+			}
+			updateGUI(GUIMessage.Status.ADD_MEMBER, chat);
+		
+		}
+		
+		
+		/**
+		 * forwards message to relevant ChatWindow if one exists, otherwise updates local record
+		 * @param message
+		 */
+		private void removeTeamMember(Message message) {
+			int teamID = (int)message.getObjects()[0];
+			String username = (String)message.getObjects()[1];
+			getTeamChat(teamID).removeUsername(username);
+			Chat chat = getTeamChat(teamID);
+			try {
+				forwardMessageTeam(teamID, message);
+			} catch (InterruptedException e) {
+				displayError("Unable to update chat window with removed team member");
+			}
+			updateGUI(GUIMessage.Status.REMOVE_MEMBER, chat);
+		}
+		
+		/**
+		 * opens a new chat window, provided one doesn't already exist
+		 */
+		private void openChatWindow(Chat chat) {
+			//if chat doesn't already exists add it to local record
+			if (chat.isTeam() == true) {
+				addAllTeamChats(chat);
+			} else {
+				System.out.println("YES");
+				addAllPrivateChats(chat);
+			}
+			//only makes windows which don't already exist
+			makeWindow(chat);
+		}
+		
+		/**
+		 * creates a chat window object and passes it to the observer
+		 * @param chat
+		 */
+		private synchronized void makeWindow(Chat chat) {
+			boolean active;
+			int thread;
+			if (chat.isTeam()) {
+				thread = team2ThreadID.getOrDefault(chat.getID(), -1);
+			} else {
+				thread = chat2ThreadID.getOrDefault(chat.getID(), -1);
+			}
+			active = currentChats.containsKey(thread);
+			if (!active) {
+				int threadID = incrementThreadID();
+				ChatWindow chatWindow = new ChatWindow(threadID, getUsername(), chat, outgoingMessages, this);
+				addCurrentChat(threadID, chatWindow);
+				if (chat.isTeam()) {
+					team2ThreadID.put(chat.getID(), threadID);
+					//the gui gets the chatWindow and runs it in a thread
+					updateGUI(GUIMessage.Status.MAKE_TEAM, chatWindow);
+				} else {
+					chat2ThreadID.put(chat.getID(), threadID);
+					updateGUI(GUIMessage.Status.START_PRIVATE_CHAT, chatWindow);
+				}
+			} 
+		}
+		
+		/*
+		 * The following methods send requests to the server
+		 * Because there is no guarantee of when the response will come, each method
+		 * defines a class which extends the abstract class Request. This object is
+		 * stored in a map and the response method is only called when the server sends
+		 * its response back.
+		 * 
+		 * The methods have a set structure- we need to implement what happens when the 
+		 * request is successful and when there is an error.
+		 */
+		
+		/**
+		 * attempts to log the user into the system- updates username and notifies
+		 * gui if successful
+		 * @param username
+		 * @param password
+		 */
+		public void login(String username, String password) {
+			if (password.length() < 8 ||! Pattern.compile("[0-9]").matcher(password).find()) {
+				updateGUI(GUIMessage.Status.LOGIN_FAIL, "Invalid username of password");
+			} else {
+				int messageID = incrementMessageID();
+				outgoingMessages.add(new Message(Message.Status.LOGIN, 1, messageID, username, password));
+				class LoginRequest extends Request {
+					@Override
+					void respond(Message message) {
+						if (message.getStatus() == Message.Status.SUCCESS) {
+							initialiseLogin(username);
+							updateGUI(GUIMessage.Status.LOGGED_IN, username);
+						} else if (message.getStatus() == Message.Status.ERROR) {
+							updateGUI(GUIMessage.Status.LOGIN_FAIL, "Invalid username of password");
+						}
+					}
+				}
+				requests.put(messageID, new LoginRequest());
+			}
+		}
+		
+		/**
+		 * initialises field variables which are only not null when the user is logged in
+		 * @param username
+		 */
+		private synchronized void initialiseLogin(String username) {
+			allUsers();
+			currentChats = new HashMap<Integer, ChatWindow>();
+			chat2ThreadID = new HashMap<Integer, Integer>();
+			team2ThreadID = new HashMap<Integer, Integer>();
+			allPrivateChats = new HashMap<Integer, Chat>();
+			allTeamChats = new HashMap<Integer, Chat>();
+			setUsername(username);
+			getPrivateChats(username); //initialises the existing chats
+			getTeamChats(username);
+		}
+		
+		protected void setUsername(String username) {
+			this.username = username;
+		}
+		
+		protected String getUsername() {
+			return this.username;
+		}
+		
+		/** 
+		 * asks server to create an account and notifies the gui whether successful or not
+		 * @param account
+		 */
+		public void createAccount(Account account) {
+			String password = account.getPassword();
+			if (password.length() < 8 ||! Pattern.compile("[0-9]").matcher(password).find()) {
+				displayError("Invalid password");
+			} else {
+				int messageID = incrementMessageID();
+				outgoingMessages.add(new Message(Message.Status.CREATE_ACCOUNT, 1, messageID, account));
+				class CreateAccountRequest extends Request {
+					@Override
+					void respond(Message message) {
+						if (message.getStatus() == Message.Status.SUCCESS) {
+							String user = account.getUsername();
+							initialiseLogin(user);
+							updateGUI(GUIMessage.Status.ACCOUNT_CREATED, user);
+						} else if (message.getStatus() == Message.Status.ERROR) {
+							updateGUI(GUIMessage.Status.ACCOUNT_CREATED_FAIL, "Account create failed");
+						}
+					}
+				}
+			requests.put(messageID, new CreateAccountRequest());
+			}
+		}
+		
+		/**
+		 * requests an account from the server and passes it to the gui
+		 * @param username
+		 */
+		public void viewAccount(String username) {
+			int messageID = incrementMessageID();
+			outgoingMessages.add(new Message(Message.Status.VIEW_ACCOUNT, 1, messageID, username));
+			class ViewAccountRequest extends Request {
+				
+				String username;
+				
+				ViewAccountRequest(String username) {
+					this.username = username;
+				}
+				@Override
+				void respond(Message message) {
+					if (message.getStatus() == Message.Status.SUCCESS) {
+						updateGUI(GUIMessage.Status.VIEW_ACCOUNT, (Account)message.getObjects()[0]);
+					} else if (message.getStatus() == Message.Status.ERROR) {
+						updateGUI(GUIMessage.Status.ERROR, "Unable to retreive " + username + "'s account.\nPlease try again.");
+					}
+				}
+			}
+			requests.put(messageID, new ViewAccountRequest(username));
+		}
+		
+		/**
+		 * requests a list of all usernames currently logged on to the system and passes it to the gui
+		 */
+		public void usersOnline() {
+			int messageID = incrementMessageID();
+			outgoingMessages.add(new Message(Message.Status.USERS_ONLINE, 1, messageID));
+			class UsersOnlineRequest extends Request {
+				@Override
+				void respond(Message message) {
+					if (message.getStatus() == Message.Status.SUCCESS) {
+						updateGUI(GUIMessage.Status.USERS_ONLINE, message.getObjects()[0]); //the gui can cast it back to ArrayList<String>
+					} else if (message.getStatus() == Message.Status.ERROR) {
+						updateGUI(GUIMessage.Status.ERROR, "Unable to retreive list of online users");
+					}
+				}
+			}
+			requests.put(messageID, new UsersOnlineRequest());
+		}
+		
+		/**
+		 * requests a list of all account usernames and passes it to the gui
+		 */
+		public void allUsers() {
+			int messageID = incrementMessageID();
+			outgoingMessages.add(new Message(Message.Status.ALL_USERS, 1, messageID));
+			class AllUsersRequest extends Request {
+				@Override
+				void respond(Message message) {
+					if (message.getStatus() == Message.Status.SUCCESS) {
+						allUsers = (ArrayList<String>)message.getObjects()[0];
+						updateGUI(GUIMessage.Status.ALL_USERS, message.getObjects()[0]);
+					} else if (message.getStatus() == Message.Status.ERROR) {
+						updateGUI(GUIMessage.Status.ERROR, "Unable to retreive list of all users");
+					}
+				}
+			}
+			requests.put(messageID, new AllUsersRequest());
+		}
+
+		/**
+		 * starts a private chat with the person specified
+		 * @param username
+		 */
+		public void startPrivateChat(String username) {
+			/*
+			 * we don't need to check that the chat doesn't already exist- the database does this
+			 * if the chatID is already in allPrivateChats it gets overwritten
+			 * BUT- problem if someone tries to start a chat they already have open
+			 * what should happen is that the old chat window stays open but doesn't receive any more updates
+			 * (think about implications for server requests...)
+			 * 
+			 * STOP- creating a chat with your self!
+			 */
+			if (this.username.equals(username)) {
+				displayError("Unable to start chat with yourself!");
+			} else {
+				int messageID = incrementMessageID();
+				outgoingMessages.add(new Message(Message.Status.START_PRIVATE_CHAT, 1, messageID, username));
+				class StartPrivateChatRequest extends Request {
+					@Override
+					void respond(Message message) {
+						if (message.getStatus() == Message.Status.SUCCESS) {
+							//similar checks to join chat
+							Chat chat = (Chat)message.getObjects()[0];
+							addAllPrivateChats(chat);
+							openChatWindow(chat);
+							updateGUI(GUIMessage.Status.JOIN_CHAT, chat);
+							} else if (message.getStatus() == Message.Status.ERROR) {
+								updateGUI(GUIMessage.Status.ERROR, "Unable to start private chat with " + username + ".");
+						}
+					}
+				}
+				requests.put(messageID, new StartPrivateChatRequest());
+			}
+		}
+		
+		/**
+		 * starts a team chat with the people specified
+		 * @param username
+		 */
+		public void makeTeam(String teamname, ArrayList<String> usernames) {
+			int messageID = incrementMessageID();
+			outgoingMessages.add(new Message(Message.Status.MAKE_TEAM, 1, messageID, usernames, teamname)); //is this an array in an array??????
+			class MakeTeamRequest extends Request {
+				@Override
+				void respond(Message message) {
+					if (message.getStatus() == Message.Status.SUCCESS) {
+						//similar checks to join chat
+						Chat chat = (Chat)message.getObjects()[0];
+						addAllTeamChats(chat);
+						openChatWindow(chat);
+						updateGUI(GUIMessage.Status.JOIN_TEAM, chat);
+					} else if (message.getStatus() == Message.Status.ERROR) {
+						updateGUI(GUIMessage.Status.ERROR, "Unable to start team chat");
+					}
+				}
+			}
+			requests.put(messageID, new MakeTeamRequest());
+		}
+		
+		/**
+		 * opens a chat window to resume an existing private chat
+		 * @param chat
+		 */
+		public void resumePrivateChat(Chat chat) {
+			openChatWindow(chat);
+		}
+
+		/**
+		 * opens a chat window to resume an existing team chat
+		 * @param chat
+		 */
+		public void resumeTeamChat(Chat chat){
+			openChatWindow(chat);
+		}
+
+		/**
+		 * requests a lists of the user's previous private chats and passes it to the observer
+		 * @param username
+		 */
+		public void getPrivateChats(String username) {
+			int messageID = incrementMessageID();
+			outgoingMessages.add(new Message(Message.Status.GET_PRIVATE_CHATS, 1, messageID, username));
+			class GetPrivateChatsRequest extends Request {
+				@Override
+				void respond(Message message) {
+					if (message.getStatus() == Message.Status.SUCCESS) {
+						@SuppressWarnings("unchecked")
+						ArrayList<Chat> chats = (ArrayList<Chat>)message.getObjects()[0];
+						for(Chat chat: chats) {
+							addAllPrivateChats(chat);
+						}
+						try {
+							Thread.sleep(100);
+						} catch (InterruptedException e) {}
+						updateGUI(GUIMessage.Status.ALL_PRIVATE_CHATS, chats);
+					} else if (message.getStatus() == Message.Status.ERROR) {
+						getPrivateChats(username);
+						updateGUI(GUIMessage.Status.ERROR, "error message");
+					}
+				}
+			}
+			requests.put(messageID, new GetPrivateChatsRequest());
+		}
+		
+		/**
+		 * requests a list of the user's previous team chats and passes it to the observer
+		 * @param username
+		 */
+		public void getTeamChats(String username) {
+			int messageID = incrementMessageID();
+			outgoingMessages.add(new Message(Message.Status.GET_TEAM_CHATS, 1, messageID, username));
+			class GetTeamChatsRequest extends Request {
+				@Override
+				void respond(Message message) {
+					if (message.getStatus() == Message.Status.SUCCESS) {
+						@SuppressWarnings("unchecked")
+						ArrayList<Chat> chats = (ArrayList<Chat>)message.getObjects()[0];
+						for(Chat chat: chats) {
+							addAllTeamChats(chat);
+						}
+						updateGUI(GUIMessage.Status.ALL_TEAM_CHATS, chats);
+					} else if (message.getStatus() == Message.Status.ERROR) {
+						getTeamChats(username);
+						updateGUI(GUIMessage.Status.ERROR, "error message");
+					}
+				}
+			}
+			requests.put(messageID, new GetTeamChatsRequest());
+		}
+		
+		/**
+		 * logs user out of devchat
+		 */
+		public void logout() {
+			int messageID = incrementMessageID();
+			outgoingMessages.add(new Message(Message.Status.LOGOUT, 1, messageID, username));
+			//there will be a response!
+			class LogoutRequest extends Request {
+				@Override
+				void respond(Message message) { //response can only be success- might not even be necessary to wait for response
+					logoutHelper();
+					updateGUI(GUIMessage.Status.LOGOUT, null);
+				}
+			}
+			requests.put(messageID, new LogoutRequest());
+		}
+
+		private synchronized void logoutHelper(){
+			//is there an issue of other responses trying to access these? - make receiving messages dependant on being logged in?
+			username = null;
+			currentChats.clear();
+			allPrivateChats.clear();
+			allTeamChats.clear();
+			chat2ThreadID.clear();
+			team2ThreadID.clear();
+			requests.clear();
+		}
+		
+		/**
+		 * creates a GUI message object and uses it to update the observer
+		 * @param status
+		 * @param object
+		 */
+		private void updateGUI(GUIMessage.Status status, Object object) {
+			setChanged();
+			notifyObservers(new GUIMessage(status, object));
+		}
+		
+		
+		/**
+		 * updates the user with an error message
+		 * @param message
+		 */
+		private void displayError(String message) {
+			updateGUI(GUIMessage.Status.ERROR, message);
+		}
+		
+		
+		/**
+		 * The incoming reader class listens continuously on the socket input stream- when a message
+		 * arrives, it puts it on a queue in the relevant part of the programme to be dealt with.
+		 * 
+		 * threadID 0 is reserved for server messages
+		 * threadID 1 is reserved for the main client
+		 * threadIDs from 2 are allocated by the client and are used by chat conversations
+		 * 
+		 * messages from the server are handled by the main client thread
+		 *
+		 */
+		class IncomingReader implements Runnable {
+			
+			public void run() {
+				while (!stop) {
+					try {
+						Message message = (Message)in.readObject();
+						receiveMessage(message);
+					} catch (ClassNotFoundException | IOException e) {
+						//Error message?
+					} catch (Exception e) {
+						stop();
+						//add to stop an attempt to reconnect?
+					}
+				}
+				/*
+				try {
+					in.close();
+				} catch (IOException e) {
+					stop();
+				}
+				*/
+
+			}
+			
+			/**
+			 * directs a message to the right part of the programme according to its threadID
+			 * @param message
+			 * @throws InterruptedException
+			 */
+			private void receiveMessage(Message message) throws InterruptedException {
+				int threadID = message.getThreadID();
+				try { //most messages are blocked if not logged in
+					if (threadID == 0 && username != null) {
+						incomingMessages.put(message);
+					} else if (threadID == 1) { //allowed through if not logged in as might be login confirmation
+						incomingMessages.put(message);
+					} else if (getUsername() != null) {
+						forwardMessage(threadID, message);
+					}
+				} catch (InterruptedException e) {
+					updateGUI(GUIMessage.Status.ERROR, "an error occured while receiving a message");
+				} 
+			}
+		}
+		
+		
+		/**
+		 * The outgoing writer class continuously takes messages from a queue which all parts of the programme
+		 * can write to and send them to the server
+		 *
+		 */
+		class OutgoingWriter implements Runnable {
+			
+			public void run() {
+				while(!stop){
+					try{
+						Message message = outgoingMessages.take();
+						if (message.getStatus() == Message.Status.LOGIN) {
+							System.out.println("login");
+						}
+						out.writeObject(message);
+						out.flush();
+					} catch(Exception e) {
+						stop();
+					}
+				}
+				/*
+				try {
+					out.close();
+				} catch (IOException e) {
+					//and if it doesn't work?
+				}
+				*/
+			}
+		}
+}

@@ -1,0 +1,92 @@
+----------------------------------------------------------------------------
+                       *** Client/GUI interaction ***
+----------------------------------------------------------------------------
+
+The GUI can call methods directly from the Client / ChatWindow. The client
+notifies GUI of changes with a GUIMessage object which contains a
+status enumeration value and (if necessary) an object.
+
+----------------------------------------------------------------------------
+                                  Client
+                                 ********
+
+The View class for the client will need to contain multiple panels and it
+is the GUIs responsibility to switch between them, e.g. when the client
+confirms that the user has been logged in, the View class must change for
+the login panel to the main client interface.
+
+----------------------------------------------------------------------------
+
+THE GUI CAN CALL THE FOLLOWING METHODS
+
+public void login(String username, String password)
+
+public void createAccount(Account account)
+
+public void viewAccount(String username)
+
+public void usersOnline()
+
+public void allUsers()
+
+public void startPrivateChat(String username)
+
+public void makeTeam(String teamname, ArrayList<String> usernames);
+
+public void resumePrivateChat(Chat chat);
+
+public void resumeTeamChat(Chat chat);
+
+public void logout()
+
+THE GUI WILL BE UPDATED IN THE FOLLOWING WAY
+
+LOGGED_IN, String {username}
+ACCOUNT_CREATED, String {username}
+VIEW_ACCOUNT, Account
+USERS_ONLINE, ArrayList<String> {users online}
+ALL_USERS, ArrayList<String> {all users}
+START_PRIVATE_CHAT, ChatWindow
+MAKE_TEAM, ChatWindow
+ALL_PRIVATE_CHATS, ArrayList<Chat> {the chats the user has already started}
+ALL_TEAM_CHATS, ArrayList<Chat> {the team the user already belongs to}
+LEAVE_TEAM, int {thread id}
+LOGOUT //no object
+ERROR, String {error message to display}
+
+
+----------------------------------------------------------------------------
+
+                                ChatWindow
+                               ************
+
+The client has one object for both private and team chats; however, the gui
+should use two different panels. The GUI might want to consider starting new
+threads for ChatWindows to improve performance.
+
+----------------------------------------------------------------------------
+
+THE GUI CAN CALL THE FOLLOWING METHODS
+
+- private:
+	public void sendPrivateMessage(ChatMessage chatMessage)
+
+- team:
+	public void sendTeamMessage(ChatMessage chatMessage)
+
+	public void addTeamMember(String username)
+
+	public void removeTeamMember(String username)
+
+
+- both:
+	public void close()
+
+THE GUI WILL BE UPDATED IN THE FOLLOWING WAY
+
+- team:
+	ADD_MEMBER, String {username}
+	REMOVE_MEMBER, String {username}
+- both:
+	DISPLAY_MESSAGE, ChatMessage {message} {Display what message?}
+	HISTORY, ArrayList<ChatMessage>

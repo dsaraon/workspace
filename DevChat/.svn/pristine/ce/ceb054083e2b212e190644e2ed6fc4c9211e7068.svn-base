@@ -1,0 +1,231 @@
+---------------------------------------------------------------------------------------------
+                                    ***** Protocol *****  
+---------------------------------------------------------------------------------------------
+
+The protocol is based around the client and server sending instances of general.Message 
+between them. An object of this type has the following field variables:
+	- a status
+	- a thread and message ID
+	- an array of objects
+
+The status has been implemented as an enumeration so that the finite number of statuses 
+available is enforced not only by the protocol but also by the Java compiler (reducing 
+the chances of bugs due to naming inconsistencies). The contents of the array is determined 
+by the message status as described in the text file. When communication is initiated by the 
+client, the server uses an instance of server.Protocol (a field variable in each instance of
+server.Connection) to parse the message, process it and respond to the client accordingly. 
+The thread and message ID of the original message are used in the response for identification 
+on the client side. When communication is initiated by the server, a thread ID of 0 is always 
+used, and no response from the client is expected.
+
+---------------------------------------------------------------------------------------------
+Communication initiated by the client:
+---------------------------------------------------------------------------------------------
+
+* Client >>> LOGIN 
+	- objects[0]: String {username}
+	- objects[1]: String {password}
+* Server >>> SUCCESS
+	- objects : none
+* Server >>> ERROR
+	- objects[0] : String {error message}
+
+---------------------------------------------------------------------------------------------
+
+* Client >>> CREATE_ACCOUNT
+	- objects[0]: Account {new account details}
+	- CLIENT RESPONSIBILITIES: the account details should be complete and valid
+* Server >>> SUCCESS
+	- objects : none
+* Server >>> ERROR
+	- objects[0] : String {error message}	
+
+---------------------------------------------------------------------------------------------
+
+* Client >>> VIEW_ACCOUNT
+	- objects[0]: String {username}
+	- CLIENT RESPONSIBILITIES: the username exists
+* Server >>> SUCCESS
+	- objects[0]: Account {requested account}
+* Server >>> ERROR
+	- objects[0] : String {error message}
+	
+---------------------------------------------------------------------------------------------
+
+* Client >>> USERS_ONLINE
+	- objects : none
+* Server >>> SUCCESS
+	- objects[0]: Set<String> {usernames currently connected to server}
+* Server >>> ERROR
+	- objects[0] : String {error message}
+	
+---------------------------------------------------------------------------------------------
+
+* Client >>> ALL_USERS 
+	- objects : none
+* Server >>> SUCCESS
+	- objects[0]: Set<String> {all usernames}
+* Server >>> ERROR
+	- objects[0] : String {error message}
+	
+---------------------------------------------------------------------------------------------
+
+* Client >>> START_PRIVATE_CHAT
+	- objects[0]: String {username of recipient}
+* Server >>> SUCCESS
+	- objects[0]: Chat {chat details}
+* Server >>> ERROR
+	- objects[0] : String {error message}
+	
+---------------------------------------------------------------------------------------------
+
+* Client >>> MAKE_TEAM
+	- objects[0]: String {team name}
+	- objects[1]: ArrayList<String> {usernames}
+* Server >>> SUCCESS
+	- objects[0]: Chat {chat details} 
+* Server >>> ERROR
+	- objects[0] : String {error message}
+	
+---------------------------------------------------------------------------------------------
+
+* Client >>> VIEW_PRIVATE_HISTORY
+	- objects[0]: int {chat id} 
+* Server >>> SUCCESS
+	- objects[0]: ArrayList<ChatMessage> {chat history} 
+* Server >>> ERROR
+	- objects[0] : String {error message}
+	
+---------------------------------------------------------------------------------------------
+
+* Client >>> VIEW_TEAM_HISTORY
+	- objects[0]: int {team id} 
+* Server >>> SUCCESS
+	- objects[0]: ArrayList<ChatMessage> {chat history} 
+* Server >>> ERROR
+	- objects[0] : String {error message}
+	
+---------------------------------------------------------------------------------------------
+
+* Client >>> SEND_PRIVATE_MESSAGE
+	- objects[0]: ChatMessage {chat message being sent}
+* Server >>> SUCCESS
+	- objects : none
+* Server >>> ERROR
+	- objects[0] : String {error message}
+	
+---------------------------------------------------------------------------------------------
+
+* Client >>> SEND_TEAM_MESSAGE
+	- objects[0]: ChatMessage {chat message being sent}
+* Server >>> SUCCESS
+	- objects : none
+* Server >>> ERROR
+	- objects[0] : String {error message}
+	
+---------------------------------------------------------------------------------------------
+* Client >>> ADD_USER
+	- objects[0]: String {username}
+	- objects[1]: Chat {chat to add to}
+* Server >>> SUCCESS
+	- objects : none
+* Server >>> ERROR
+	- objects[0] : String {error message}
+		
+---------------------------------------------------------------------------------------------
+
+* Client >>> REMOVE_USER
+	- objects[0]: String {username}
+	- objects[1]: Integer {team id}
+* Server >>> SUCCESS
+	- objects : none
+* Server >>> ERROR
+	- objects[0] : String {error message}
+	
+---------------------------------------------------------------------------------------------
+*** IMPLEMENT LATER ***
+* Client >>> DELIVERED_PRIVATE
+	- objects[0]: String {username}
+	- objects[1]: int {chatID}
+* Server >>> SUCCESS
+	- objects : none
+* Server >>> ERROR
+	- objects[0] : String {error message}
+	
+---------------------------------------------------------------------------------------------
+*** IMPLEMENT LATER ***
+* Client >>> DELIVERED_TEAM
+	- objects[0]: String {username}
+	- objects[1]: int {team ID}
+* Server >>> SUCCESS
+	- objects : none
+* Server >>> ERROR
+	- objects[0] : String {error message}
+	
+---------------------------------------------------------------------------------------------
+
+* Client >>> GET_PRIVATE_CHATS
+	- objects[0]: String {username}
+* Server >>> SUCCESS
+	- objects[0] : ArrayList<Chat> {all previous private chats}
+* Server >>> ERROR
+	- objects[0] : String {error message}
+	
+---------------------------------------------------------------------------------------------
+
+* Client >>> GET_TEAM_CHATS
+	- objects[0]: String {username}
+* Server >>> SUCCESS
+	- objects[0] : ArrayList<Chat> {all previous team messages}
+* Server >>> ERROR
+	- objects[0] : String {error message}
+	
+---------------------------------------------------------------------------------------------
+
+* Client >>> LOGOUT
+	- objects[0]: String {username};
+* Server >>> SUCCESS
+	- objects : none
+* Server >>> ERROR
+	- objects[0] : String {error message}
+	
+---------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------
+Communication initiated by the server:
+---------------------------------------------------------------------------------------------
+
+* Server >>> JOIN_CHAT
+	- objects[0]: Chat {details of chat}
+
+---------------------------------------------------------------------------------------------
+
+* Server >>> JOIN_TEAM
+	- objects[0]: Chat {chat to join}
+
+---------------------------------------------------------------------------------------------
+
+* Server >>> LEAVE_TEAM
+	- objects[0]: int {team id}
+
+---------------------------------------------------------------------------------------------
+
+* Server >>> RECEIVE_PRIVATE_ MESSAGE
+	- objects[0]: ChatMessage {the message sent}
+
+---------------------------------------------------------------------------------------------
+
+* Server >>> RECEIVE_TEAM_MESSAGE
+	- objects[0]: ChatMessage {the message sent}
+
+--------------------------------------------------------------------------------------------
+
+* Server >>> ADD_TEAM_MEMBER
+	- objects[0]: int {teamID}
+	- objects[1]: String {username of person added}
+
+---------------------------------------------------------------------------------------------
+* Server >>> REMOVE_TEAM_MEMBER
+	- objects[0]: int {teamID}
+	- objects[1]: String {username of person removed}
+
+---------------------------------------------------------------------------------------------

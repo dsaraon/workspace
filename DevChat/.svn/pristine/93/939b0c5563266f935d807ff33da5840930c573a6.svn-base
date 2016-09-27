@@ -1,0 +1,55 @@
+package general;
+
+import java.io.Serializable;
+import java.util.Calendar;
+
+//THIS CLASS IS NOT COMPLETE!
+public class ChatMessage implements Comparable<Calendar>, Serializable {
+	
+	private static final long serialVersionUID = 1L;
+	private int id;
+	private String username;
+	private Calendar timestamp;
+	private String message;
+	
+	public ChatMessage(int id, String username, String message) {
+		this.id = id;
+		this.username = username;
+		this.timestamp = Calendar.getInstance();
+		this.message = message;
+	}
+	
+	/*
+	 * for use in constructing chat history
+	 */
+	public ChatMessage(int id, String username, Calendar timestamp, String message) {
+		this.id = id;
+		this.username = username;
+		this.timestamp = timestamp;
+		this.message = message;
+	}
+	
+	public int getID() {
+		return id;
+	}
+	
+	public String getUsername() {
+		return username;
+	}
+	
+	public Calendar getTimestamp() {
+		return timestamp;
+	}
+	
+	public String getMessage() {
+		return message;
+	}
+	
+
+	@Override
+	public int compareTo(Calendar o) {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+}

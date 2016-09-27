@@ -1,0 +1,17 @@
+package general;
+//THIS CLASS IS NOT COMPLETE!
+public class ChatMessage implements Comparable {
+	
+	private int chatID;
+	private int userID;
+	//what ever class we use for the date!
+	private String message;
+	
+	
+	@Override
+	public int compareTo(Object o) {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+}

@@ -1,0 +1,9 @@
+** Do we want to record when a user was last active?
+
+** Using chat_ID and message_sent as primary keys won't work if messages can be sent simultaneously!
+
+** Is server assigning chat IDs?
+	-- If so, how does it check if a chat has been open previously?
+	
+** What to do on delete (of user)?
+	-- Add constraints if messages are deleted

@@ -1,0 +1,34 @@
+import java.io.Serializable;
+
+/**
+ * 
+ * @author Anna and Divyjyot
+ * @version 27/02/2015
+ *
+ */
+public class Message implements Serializable {
+	
+	private static final long serialVersionUID = 1L;
+
+	public static enum Status {LOGIN, CREATE_ACCOUNT, VIEW_ACCOUNT, USERS_ONLINE, ALL_USERS, START_PRIVATE_CHAT,
+		START_GROUP_CHAT, VIEW_HISTORY, SEND_MESSAGE, QUIT, JOIN_CHAT, RECEIVE_MESSAGE, GET_USERNAME, SUCCESS, ERROR};
+
+	private Status status;
+	private Object[] objects;
+	
+	public Message (Status status, Object... objects) {
+		this.status = status;
+		this.objects = new Object[objects.length];
+		for (int i = 0; i < objects.length; i++) {
+			this.objects[i] = objects[i];
+		}
+	}
+	
+	public Status getStatus() {
+		return this.status;
+	}
+	
+	public Object[] getObjects() {
+		return this.objects;
+	}
+}

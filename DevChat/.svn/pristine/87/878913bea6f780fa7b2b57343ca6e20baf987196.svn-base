@@ -1,0 +1,146 @@
+package client;
+/**
+ * @author Jessica White
+ * @author Divyjyot Saraon
+ */
+import general.ChatMessage;
+import general.Message;
+import general.Message.Status;
+
+import java.awt.event.ActionEvent;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.net.Socket;
+import java.util.Observable;
+import java.util.Scanner;
+import java.util.concurrent.LinkedBlockingQueue;
+
+import client.gui.ChatGUI;
+
+/* The design of this 'Client' so far would need to call the making of the GUI.*  
+*/
+
+public class Client extends Observable{
+	/*	String hostName = "127.0.0.1"; //will these two be retrieved from the server? Should match that of the ServerSocket  
+		int portNumber = 5000;   */ 
+		
+		Socket clientSocket;
+		private ObjectOutputStream out;
+		private ObjectInputStream in;
+		private Thread readerThread;
+		private Thread writerThread;
+		private String username;
+		private LinkedBlockingQueue<Message> incomingMessages;
+		private LinkedBlockingQueue<Message> outgoingMessages;
+
+		/** Client Constructor.
+		 * @param host - IP
+		 * @param portNumber- portNumber
+		 * @param username - of person logged into chat.
+		 */
+		public Client(String host, int portNumber, String username){
+			start(host, portNumber);
+			this.username = username;
+		}
+			
+		/**
+		 * Start up everything needed for Client to work
+		 * @param host - same as before
+		 * @param portNumber - same as before.
+		 */
+		public void start(String host, int portNumber){
+			setupNetwork(host, portNumber);
+			setupReader();
+			setupWriter();
+			listenForIncomingMessages();
+		}
+		
+		/**
+		 * Sets up the communication with the Server.
+		 * @param host
+		 * @param portNumber
+		 */
+		private void setupNetwork(String host, int portNumber){
+			//connecting with the server -   
+			try{
+				clientSocket = new Socket(host, portNumber);
+			    out = new ObjectOutputStream(clientSocket.getOutputStream());
+			    out.flush();
+				in = new ObjectInputStream(clientSocket.getInputStream());	
+			}catch(IOException e){
+				e.printStackTrace();
+			}
+		}
+		
+		private void setupReader() {
+			incomingMessages = new LinkedBlockingQueue<Message>();
+			readerThread = new Thread(new IncomingReader(in, incomingMessages));
+			readerThread.start();
+		}
+		
+		private void setupWriter() {
+			outgoingMessages = new LinkedBlockingQueue<Message>();
+			writerThread = new Thread(new OutgoingWriter(out, outgoingMessages));
+			writerThread.start();
+		}
+		
+		// Currently listens for incoming messages 
+		// needs to be expanded as Client becomes responsible for more methods. Can do Login etc.
+		private void listenForIncomingMessages() {
+			Message incomingMessage;
+			try {
+				while((incomingMessage = incomingMessages.take()) != null){
+					switch(incomingMessage.getStatus()){
+					case SEND_PRIVATE_MESSAGE:
+						observableMessageReceived(incomingMessage);
+						break;
+					default:
+						break;					
+					}
+				}
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		}
+		
+		// notifies GUI of incoming messages
+		protected void observableMessageReceived(Message incomingMessage) {
+			setChanged();
+	    	notifyObservers(incomingMessage);	
+		}
+		
+		//Stops all threads
+		public void stop(){
+			readerThread.interrupt();
+			writerThread.interrupt();
+		}
+		
+		/** Creates new ChatMessage object to send to Server.
+		 * @param chatId - ID of chat 
+		 * @param username - Taken from login
+		 * @param messageContent - the messages to be sent
+		 */
+		public void sendMessage(int chatId, String username, String messageContent) {
+			ChatMessage chatMessage = new ChatMessage(chatId, username, messageContent);
+			//TODO: decide what to do with threadID???
+			//TODO: decide what to do with messageID???
+			Message message = new Message(Status.SEND_PRIVATE_MESSAGE, 0, 0, chatMessage);
+			outgoingMessages.add(message);
+		}
+		
+		//TODO: client needs to spin up the relevant GUIs and remember the current user
+		//TODO: needs to spawn up a Login GUI, do the work associated and then when username and password are confirmed, close login and spawn chat gui.
+		public static void main(String[] args) {
+			try {
+				//Client client = new Client("127.0.0.1", 5000, "JDawg");
+				Client client = new Client(args[0], Integer.parseInt(args[1]), args[2]);
+				ChatGUI gui = new ChatGUI(client);
+				while(true){
+					
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+}

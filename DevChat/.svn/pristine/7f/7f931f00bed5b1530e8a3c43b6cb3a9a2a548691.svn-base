@@ -1,0 +1,118 @@
+package Tests;
+/**
+ * Tests for ChatWindow methods.
+ * @author Jessica White
+ */
+import static org.junit.Assert.*;
+
+import java.util.concurrent.LinkedBlockingQueue;
+
+import general.ChatMessage;
+import general.Message;
+
+import org.junit.Before;
+import org.junit.Test;
+
+public class ChatWindowTest {
+	//Testnames => Given-When-Then
+	private String username = "TEST USERNAME";
+	private LinkedBlockingQueue<Message> in; //incoming queue
+	private LinkedBlockingQueue<Message> out; //the client's queue
+	private Message newMessage; // for methods receiving message
+	private ChatMessage chatMessage; // for methods receiving ChatMessage
+	
+	@Before
+	public void setUpIn() throws InterruptedException{
+		Message message1 = null; //need to make message
+		Message message2 = null; //need to make message
+		Message message3 = null; //need to make message
+
+		in.put(message1);
+		in.put(message2);
+		in.put(message3);
+	}
+
+	@Test
+	public void respondToServer_recievePrivateMessage_GUIMessageDisplayMessage() {
+		newMessage = null ;
+	}	
+	
+	@Test
+	public void respondToServer_recieveTeamMessage_GUIMessageDisplayMessage() {
+		newMessage = null ;
+
+	}
+	
+	@Test
+	public void respondToServer_addTeamMember_GUIMessageAddMember() {
+		newMessage = null ;
+
+	}
+	
+	@Test
+	public void respondToServer_removeTeamMember_GUIMessageRemoveMember() {
+		newMessage = null ;
+
+	}
+
+	@Test
+	public void receiveMessage_sucess_inHasNewMessage() {
+		newMessage = null ;
+
+	}
+	
+	@Test
+	public void getPrivateHistory_success_GUIMessageHistory() {
+		
+	}
+
+	@Test
+	public void getPrivateHistory_fail_GUIMessageError() {
+		
+	}
+
+	@Test
+	public void getTeamHistory_success_GUIMessageHistory() {
+		
+	}
+
+	@Test
+	public void getTeamHistory_fail_GUIMessageError() {
+		
+	}
+
+	//no response to success for send private message
+
+	@Test
+	public void sendPrivateMessage_fail_GUIMessageError() {
+		
+	}
+
+	//no response to success for send team message
+
+	@Test
+	public void sendTeamMessage_fail_GUIMessageError() {
+		
+	}
+
+	@Test
+	public void addTeamMember_success_GUIMessageAddMember() {
+		
+	}
+
+	@Test
+	public void addTeamMember_fail_GUIMessageError() {
+		
+	}
+	
+	@Test
+	public void removeTeamMember_success_GUIMessageRemoveMember() {
+		
+	}
+
+	@Test
+	public void removeTeamMember_fail_GUIMessageError() {
+		
+	}
+	
+}

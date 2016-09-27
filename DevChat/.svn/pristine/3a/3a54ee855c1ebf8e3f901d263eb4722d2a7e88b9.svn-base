@@ -1,0 +1,66 @@
+package client;
+/**
+ * @author Jessica White
+ * @author Divyjyot Saraon
+ */
+import general.Message;
+import java.io.ObjectInputStream;
+
+public class IncomingReader implements Runnable {
+	private ObjectInputStream inputStream;
+	
+	//TODO: pass text area through and write directly to GUI??
+	public IncomingReader(ObjectInputStream in) {
+		inputStream = in;
+	}
+
+	@Override
+	public void run() {
+		try{
+			Message message;
+			//TODO: figure out how this behaves when there is no object on the stream
+			while((message = (Message)inputStream.readObject()) != null){
+				//TODO: wire up what to do with each case
+				switch(message.getStatus()){
+				case ADD_USER:
+					break;
+				case ALL_USERS:
+					break;
+				case CREATE_ACCOUNT:
+					break;
+				case ERROR:
+					break;
+				case GET_USERNAME:
+					break;
+				case JOIN_CHAT:
+					break;
+				case LOGIN:
+					break;
+				case RECEIVE_MESSAGE:
+					break;
+				case REMOVE_USER:
+					break;
+				case SEND_MESSAGE:
+					break;
+				case START_GROUP_CHAT:
+					break;
+				case START_PRIVATE_CHAT:
+					break;
+				case SUCCESS:
+					break;
+				case USERS_ONLINE:
+					break;
+				case VIEW_ACCOUNT:
+					break;
+				case VIEW_HISTORY:
+					break;
+				default:
+					break;
+				}
+				System.out.println("got a message!: " + message.toString());
+			}
+		}catch(Exception ex){
+			ex.printStackTrace();
+		}
+	}
+}

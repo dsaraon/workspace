@@ -1,0 +1,142 @@
+import java.util.*;
+
+
+public class Protocol{
+	
+	/*
+	 * success and error messages need to made more precise depending
+	 * on what communication we want
+	 */
+	
+	private int sessionID; //allocated by the server
+	private String user;
+	
+	public Protocol(int sessionID) {
+		this.sessionID = sessionID;
+	}
+	
+	public int getSessionID() {
+		return sessionID;
+	}
+	
+	public void setUser(String user) {
+		this.user = user;
+	}
+	
+	public String getUser() {
+		return user;
+	}
+	
+	/*
+	 * processes communication initiated by the client- another method should process
+	 * responses to communication initiated by the server
+	 */
+	public Message processMessage(Message message) {
+		Message.Status status = message.getStatus();
+		switch (status) {
+			case LOGIN : return login(message);
+			case CREATE_ACCOUNT : return createAccount(message);
+			case VIEW_ACCOUNT : return viewAccount(message);
+			case USERS_ONLINE : return usersOnline();
+			case ALL_USERS : return allUsers();
+			case START_PRIVATE_CHAT : return startPrivateChat(message);
+			case START_GROUP_CHAT : return startGroupChat(message);
+			case VIEW_HISTORY : return viewHistory(message);
+			case QUIT : return quit();
+			default : return new Message(Message.Status.ERROR, "message not recognised");
+		}
+	}
+	
+	private Message login(Message message) {
+		try {
+			//the expected object arguments - might need to handle nullpointer exceptions
+			String username = (String)message.getObjects()[0];
+			String password = (String)message.getObjects()[1];
+			Methods.login(username, password);
+			setUser(username);
+			return new Message(Message.Status.SUCCESS);
+		} catch (Exception e) {
+			return new Message(Message.Status.ERROR, e);
+		}
+	}
+
+	private Message createAccount(Message message) {
+		 //EXPECTED: Client should ensure that user information is complete and valid before sending
+		Account account = (Account)message.getObjects()[0];
+		try {
+			Methods.createAccount(account);
+			setUser(account.getUsername());
+			return new Message(Message.Status.SUCCESS);
+		} catch (Exception e) {
+			return new Message(Message.Status.ERROR, e);
+		}
+		
+	}
+
+	private Message viewAccount(Message message) {
+		String username = (String)message.getObjects()[0];
+		try {
+			Account account = Methods.viewAccount(username);
+			return new Message(Message.Status.SUCCESS, account);
+		} catch (Exception e) {
+			return new Message(Message.Status.ERROR, e);
+		}
+	}
+	
+	private Message usersOnline() {
+		try {
+			ArrayList<String> online = Methods.usersOnline();
+			return new Message(Message.Status.SUCCESS, online);
+		} catch (Exception e) {
+			return new Message(Message.Status.ERROR, e);
+		}
+	}
+	
+	private Message allUsers() {
+		try {
+			ArrayList<String> users = new ArrayList<String>();
+			return new Message(Message.Status.SUCCESS, users);
+		} catch (Exception e) {
+			return new Message(Message.Status.ERROR, e);
+		}
+	}
+	
+	private Message startPrivateChat(Message message) {
+		try {
+			//the person the client wants to start a private chat with
+			String name = (String)message.getObjects()[0];
+			int connect = Methods.startPrivateChat(name);
+			return new Message(Message.Status.SUCCESS, connect);
+			
+		} catch (Exception e) {
+			return new Message(Message.Status.ERROR, e);
+		}
+	}
+	
+	private Message startGroupChat(Message message) {
+		try {
+			String [] names = (String[])message.getObjects();
+			Map<String, Integer> connections = Methods.startGroupChat(names);
+			return new Message(Message.Status.SUCCESS, connections);
+		} catch (Exception e) {
+			return new Message(Message.Status.ERROR, e);
+		}
+	}
+	
+	private Message viewHistory(Message message) {
+		/*
+		 * something will happen depending on decisions made on the client side
+		 */
+		return new Message(null);
+	}
+	
+	private Message quit() {
+		//notifies anyone communicating with this user that they are disconnecting
+		try {
+			Methods.quit(sessionID);
+			return new Message(Message.Status.SUCCESS);
+		} catch (Exception e) {
+			return new Message(Message.Status.ERROR, e);
+		}
+	}
+}

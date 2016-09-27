@@ -1,0 +1,39 @@
+package testclient;
+
+import general.Message;
+
+import java.io.IOException;
+import java.io.ObjectOutputStream;
+import java.util.concurrent.LinkedBlockingQueue;
+
+public class Writer implements Runnable {
+	
+	private ObjectOutputStream out;
+	private LinkedBlockingQueue<Message> queue; //or maybe another queue
+	
+	public Writer(ObjectOutputStream out, LinkedBlockingQueue<Message> queue) {
+		this.out = out;
+		this.queue = queue;
+	}
+
+	@Override
+	public void run() {
+		while (true) {
+			try {
+				Message message = queue.take();
+				out.writeObject(message);
+				out.flush();
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		
+		
+		
+	}
+
+}

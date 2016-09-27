@@ -1,0 +1,141 @@
+package client;
+
+import java.awt.BorderLayout;
+import java.awt.Dimension;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.Observable;
+import java.util.Observer;
+
+import javax.swing.Box;
+import javax.swing.ImageIcon;
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JToolBar;
+
+public class ToolbarPanelChatGUI extends JPanel implements Observer, ActionListener {
+
+	/**
+	 * Serial Version
+	 */
+	private static final long serialVersionUID = 1L;
+
+	static final private String INVITE_REMOVE = "inviteRemove";
+	static final private String LEAVE_TEAM = "leaveTeam";
+	private ChatWindow chatWindow;
+	private String username;
+	private Client client;
+	private ArrayList<String> allUsers;
+	private TeamChatGUI rootFrame;
+
+	public ToolbarPanelChatGUI(ChatWindow chatWindow, String username, Client client, ArrayList<String> allUsers, TeamChatGUI rootFrame) {
+		setLayout(new BorderLayout()); // Set Layout for Toolbar
+		
+		this.chatWindow = chatWindow;
+		chatWindow.addObserver(this);
+		this.client = client;
+		client.addObserver(this);
+		this.username = username;
+		this.allUsers = allUsers;
+		System.out.println("TPCG " + allUsers);
+		
+		this.rootFrame = rootFrame;
+		
+		// Create the toolbar
+		JToolBar toolBar = new JToolBar("Main Toolbar");
+		addButtons(toolBar);
+		toolBar.setFloatable(false); // Don't want user dragging it
+
+		// Layout panel
+		setPreferredSize(new Dimension(350, 70));
+		//add(Help.createPicture("devchatlogosmall.png")); // Add logo
+		//add(Help.createPicture("devchatlogosmall.png"), BorderLayout.EAST); // Add logo
+		add(toolBar, BorderLayout.PAGE_START);
+	}
+
+	protected void addButtons(JToolBar toolBar) {
+		JButton button = null;
+		
+		toolBar.add(Help.createPicture("devchatlogosmall.png"));
+
+		// first button
+		toolBar.add(Box.createRigidArea(new Dimension(5,0)));
+		button = makeNavigationButton("addremovesmall.png", INVITE_REMOVE,
+				"Invite/Remove", "Invite/Remove");
+		toolBar.add(button);
+		
+		// second button
+		button = makeNavigationButton("leaveteam.png", LEAVE_TEAM,
+				"Leave Team", "Leave Team");
+		toolBar.add(button);
+	}
+
+	protected JButton makeNavigationButton(String imageName,
+			String actionCommand, String toolTipText, String altText) {
+		// Look for the image.
+		String imgLocation = "" + imageName;
+		//String imgLocation = "images/" + imageName;
+		URL imageURL = ToolbarPanelMainGUI.class.getResource(imgLocation);
+
+		// Create and initialize the button.
+		JButton button = new JButton();
+		button.setActionCommand(actionCommand);
+		button.setToolTipText(toolTipText);
+		button.addActionListener(this);
+
+		if (imageURL != null) { // image found
+			button.setIcon(new ImageIcon(imageURL, altText));
+		} else { // no image found
+			button.setText(altText);
+			System.err.println("Resource not found: " + imgLocation);
+		}
+
+		return button;
+	}
+
+	@Override
+	public void actionPerformed(ActionEvent e) {
+		String cmd = e.getActionCommand();
+		
+		switch(cmd){
+		case INVITE_REMOVE:
+			InviteRemoveGUI test = new InviteRemoveGUI(chatWindow, client, allUsers);
+			break;
+		case LEAVE_TEAM:
+			int reply = JOptionPane.showConfirmDialog(null, 
+					"Are you sure you want to leave the team?",
+					"Confirm", JOptionPane.YES_NO_OPTION);
+			if(reply == JOptionPane.YES_OPTION){
+				// Enter code for leaving team
+				chatWindow.removeTeamMember(username);
+				rootFrame.dispose();
+				break;
+			}else{
+				break;
+			}
+		}
+	}
+
+	@Override
+	public void update(Observable o, Object arg) {
+		// TODO Auto-generated method stub
+		
+	}
+	public static void main(String[] args) {
+//		JFrame frame = new JFrame("Toolbar Demo");
+//		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+//		 
+//	        //Add content to the window.
+//	        frame.add(new ToolbarPanelChatGUI());
+//	 
+//	        //Display the window.
+//	        frame.pack();
+//	        frame.setVisible(true);
+	}
+
+	
+}

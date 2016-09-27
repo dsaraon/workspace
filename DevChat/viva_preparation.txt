@@ -1,0 +1,42 @@
+//TODO: List any issues which we may need answers for
+//- Those that will probably not be fixed by viva -
+// please add as things arise.
+
+
+Issues to Consider:
+-------------------
+
+---------------------------------------------------------------------------------------------------
+ Code that we couldn't complete / Plans we had for it
+---------------------------------------------------------------------------------------------------
+
+---------------------------------------------------------------------------------------------------
+ Security
+---------------------------------------------------------------------------------------------------
+	- ArrayList of usernames
+	- Accessibility of passwords
+
+---------------------------------------------------------------------------------------------------
+ Error Management
+---------------------------------------------------------------------------------------------------
+	- Currently user has to manage errors (try again) would
+	  be nice to have the system set up to deal with errors internally
+
+---------------------------------------------------------------------------------------------------
+ Separation of Concerns(?)
+---------------------------------------------------------------------------------------------------
+
+
+---------------------------------------------------------------------------------------------------
+ Testing
+---------------------------------------------------------------------------------------------------
+
+
+---------------------------------------------------------------------------------------------------
+ What we would change if we were to do it again
+---------------------------------------------------------------------------------------------------
+Usernames in general.Chat would be better as a Set. We don't need the indexing of an ArrayList
+but we do require there to be no duplicates and currently we have extra code to achieve this
+(plus the extra code in the implementation of ArrayList we're not using and is there even though
+we can't see it!)
+

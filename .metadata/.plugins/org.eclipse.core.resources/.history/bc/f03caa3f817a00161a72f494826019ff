@@ -1,0 +1,45 @@
+
+public class Exercise5 {
+
+	public static boolean[][] checkSudoku(int[][] game){
+		boolean[][] result = new boolean[3][9];
+		//initialize
+		for(int i =0; i<3; i++){
+			for(int j = 0; j<9; j++){
+				result[i][j] = true;
+			}
+		}
+		
+		for(int i = 0; i < 9; i++){
+			for(int j = 0; j < 9; j++){
+				//int token = game[i][j];
+				//compare against row - column changes, row stays same as i
+				for(int c = j+1; c< 9; c++){
+					if(game[i][j] == game[i][c]){
+						result[0][i] = false;
+						break;
+					}
+						
+				}
+				
+				//compare against column - row changes, column stays same as j
+				for(int r = i+1; r< 9; r++){
+					if(game[i][j] == game[r][j]){
+						result[1][j] = false;
+						break;
+					}
+				}	
+				//check subsquares
+				int subSquare = (i/3)*3 + (j/3);
+				for(int ){
+					for(int){
+						
+					}
+				}
+				
+			}
+		}
+		return result;
+		
+	}
+}

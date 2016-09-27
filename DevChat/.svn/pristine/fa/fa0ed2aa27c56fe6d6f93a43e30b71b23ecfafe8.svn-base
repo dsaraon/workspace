@@ -1,0 +1,75 @@
+package tests;
+
+import java.util.Observable;
+import java.util.Observer;
+
+import client.ChatWindow;
+import client.Client;
+import client.GUIMessage;
+
+public class TestObserver implements Observer {
+	
+	protected Runnable client;
+	protected Thread clientThread;
+	protected String result;
+	
+	public TestObserver (Client client) {
+		this.client = client;
+		client.addObserver(this);
+		clientThread = new Thread(client);
+		clientThread.start();
+	}
+	
+	public TestObserver (ChatWindow client) {
+		this.client = client;
+		client.addObserver(this);
+		clientThread = new Thread(client);
+		clientThread.start();
+	}
+
+	@Override
+	public void update(Observable o, Object arg) {
+		GUIMessage message = (GUIMessage)arg;
+		switch(message.getStatus()) {
+			case LOGGED_IN: result = "logged in";
+			break;
+		case ACCOUNT_CREATED: result = "account created";
+			break;
+		case ACCOUNT_CREATED_FAIL: result = "account created fail";
+			break;
+		case ADD_MEMBER: result = "add member";
+			break;
+		case ALL_PRIVATE_CHATS: result = "all private chats";
+			break;
+		case ALL_TEAM_CHATS: result = "all team chats";
+			break;
+		case ALL_USERS: result = "all users";
+			break;
+		case DISPLAY_MESSAGE: result = "display message";
+			break;
+		case ERROR: result = "error";
+			break;
+		case HISTORY: result = "history";
+			break;
+		case LEAVE_TEAM: result = "leave team";
+			break;
+		case LOGIN_FAIL: result = "login fail";
+			break;
+		case MAKE_TEAM: result = "make team";
+			break;
+		case REMOVE_MEMBER: result = "remove member";
+			break;
+		case START_PRIVATE_CHAT: result = "start private chat";
+			break;
+		case USERS_ONLINE: result = "users online";
+			break;
+		case VIEW_ACCOUNT: result = "view account";
+			break;
+		default:
+			break;
+			
+		}
+		
+	}
+
+}

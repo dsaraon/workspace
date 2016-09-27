@@ -1,0 +1,11 @@
+package revision;
+
+public class DoublyLinkedList {
+	
+	DoublyLinkedList left;
+	Person p;
+	DoublyLinkedList right;
+	
+	
+	
+}

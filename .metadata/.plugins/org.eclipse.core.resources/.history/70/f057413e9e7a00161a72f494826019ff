@@ -1,0 +1,81 @@
+
+public class Exercise5 {
+
+	public static boolean[][] checkSudoku(int[][] game){
+		boolean[][] result = new boolean[3][9];
+		//initialize
+		for(int i=0; i<3; i++){
+			for(int j = 0; j<9; j++){
+				result[i][j] = true;
+			}
+		}
+		
+		for(int i = 0; i < 9; i++){
+			for(int j = 0; j < 9; j++){
+				int token = game[i][j];
+				//compare against row - column changes, row stays same as i
+				for(int c = j+1; c< 9; c++){
+					if(game[i][j] == game[i][c]){
+						result[0][i] = false;
+						break;
+					}
+						
+				}
+				
+				//compare against column - row changes, column stays same as j
+				for(int r = i+1; r< 9; r++){
+					if(game[i][j] == game[r][j]){
+						result[1][j] = false;
+						break;
+					}
+				}	
+				//check subsquares
+				int subSquare = (i/3)*3 + (j/3);
+				int subRowStart = (subSquare/3)*3;
+				int subRowEnd = subRowStart + 3;
+				int subColStart = (subSquare%3)*3;
+				int subColEnd = subColStart + 3;
+					
+				System.out.println("Begins");
+				System.out.println("Square:" + subSquare + " i:" + i + " j:" + j);
+				for(int k = subRowStart; k < subRowEnd; k++){
+					for(int l = subColStart; l < subColEnd; l++){
+						System.out.println(k + " " + l);
+						if(token == game[k][l]){
+							result[2][subSquare] = false;
+							break;
+						}
+					}	
+				}
+				System.out.println("Ends");
+				
+			}
+		}
+		
+		for(int i = 0; i < 3; i++){
+			for(int j = 0; j < 9; j++){
+				System.out.print(result[i][j] + " ");
+			}
+			System.out.println();
+		}
+		
+		return result;
+	}
+	public static void main(String args[]){
+		//trial1
+		int[][] sudoku = { {1,2,3, 4,5,6, 7,8,9},
+                           {4,5,6, 2,2,2, 2,2,2},
+                           {7,8,9, 3,3,3, 3,3,3},
+                           
+                           {4,4,4, 4,4,4, 4,4,4},
+                           {5,5,5, 5,5,5, 5,5,5},
+                           {6,6,6, 6,6,6, 6,6,6},
+                           
+                           {7,7,7, 7,7,7, 7,7,7},
+                           {8,8,8, 8,8,8, 8,8,8},
+                           {9,9,9, 9,9,9, 9,9,1} };
+        checkSudoku(sudoku);                   
+       
+	}
+
+}

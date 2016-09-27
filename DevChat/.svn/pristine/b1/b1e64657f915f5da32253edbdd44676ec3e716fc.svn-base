@@ -1,0 +1,70 @@
+package testclient;
+
+import general.*;
+
+import java.io.*;
+import java.net.Socket;
+import java.net.UnknownHostException;
+import java.util.Observable;
+import java.util.Scanner;
+import java.util.concurrent.LinkedBlockingQueue;
+
+/*
+ * A VERY basic client-
+ * If using with the server, make sure the constructor contains "loggedIn.put("A", 1);" and "loggedIn.put("B", 2);"
+ * and that the sendPrivateMessage method has String members set to {"A", "B"}
+ * To run the client use three arguments at the command line- the ip address of the server, the port number used by
+ * the server and a username: A for the first connection and B for the second
+ * If not connected to the database, comment out "database.savePrivateMessage(chatMessage, true);" and
+ * 	"database.savePrivateMessage(chatMessage, true);" in sendPrivateMessage
+ *
+ */
+public class TestClient {
+	
+	Socket socket;
+	Thread listener;
+	Thread writer;
+	LinkedBlockingQueue<Message> queue;
+	String username;
+
+	
+	public TestClient(String host, int portNumber, String username) throws UnknownHostException, IOException {
+		socket = new Socket(host, portNumber);
+		this.queue = new LinkedBlockingQueue<Message>();
+		this.username = username;
+		ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
+		out.flush();
+		ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
+		this.listener = new Thread(new Listener(in));
+		this.writer = new Thread(new Writer(out, queue));
+		listener.start();
+		writer.start();
+	}
+	
+	
+	public static void main(String [] args) {
+		try {
+			TestClient client = new TestClient(args[0], Integer.parseInt(args[1]), args[2]);
+			System.out.println("connected to server with username " + args[2]);
+			Scanner scanner = new Scanner(System.in);
+			String input;
+			boolean stop = false;
+			while (!stop) {
+				input = scanner.nextLine();
+				if (input.equals("stop")) {
+					stop = true;
+				} else {
+					ChatMessage chatMessage = new ChatMessage(1, client.username, input);
+					client.queue.put(new Message(Message.Status.SEND_PRIVATE_MESSAGE, 0, 0, chatMessage));
+				}
+			}
+			scanner.close();
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		
+	}
+
+
+}

@@ -1,0 +1,227 @@
+package client;
+
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.ArrayList;
+import java.util.Observable;
+import java.util.Observer;
+
+import javax.swing.DefaultListModel;
+import javax.swing.JButton;
+import javax.swing.JComboBox;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JList;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.ListSelectionModel;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
+
+public class InviteRemoveGUI extends JFrame implements Observer, ActionListener, ListSelectionListener {
+	
+	/**
+	 * Serial Version
+	 */
+	private static final long serialVersionUID = 1L;
+	
+	static final private String ADD_MEMBER = "addMember";
+	static final private String REMOVE_MEMBER = "removeMember";
+	static final private String DONE = "done";
+	
+	//private Client client; // Declare Model (Backend)
+	
+	// Declare Components
+	JButton removeButton;
+	JButton addButton;
+	JButton doneButton;
+	JList<String> currentMembersList;
+	DefaultListModel<String> listModel;
+	JComboBox<String> addList;
+	
+	// Declare ArrayLists storing members and contacts
+	ArrayList<String> mList;
+	ArrayList<String> aList;
+	
+	//public InviteRemoveGUI(Client client) {
+	public InviteRemoveGUI() {
+		
+		//Create and set up the window.
+		super("Add Team Member"); // Create new Frame with title
+		setSize(500, 500); // Set Size
+		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE); // Close Operation
+		setResizable(false);
+		JPanel main = new JPanel(); // Create and initialise JPanel
+		Font font = new Font("Calibri", Font.BOLD, 14); // Default Font
+		
+		// Integrate GUI with backend
+		//this.client = client; 
+		//client.addObserver(this);
+		
+		// Setup Components
+		main.setLayout(new GridBagLayout());
+		GridBagConstraints c = new GridBagConstraints();
+		// Labels
+		JLabel currentMembersLabel = new JLabel("Current Members:", JLabel.RIGHT);
+		currentMembersLabel.setFont(font);
+		JLabel addMemberLabel = new JLabel("Add Member:", JLabel.RIGHT);
+		addMemberLabel.setFont(font);
+		// Buttons
+		removeButton = new JButton("Remove Member");
+		removeButton.setActionCommand(REMOVE_MEMBER);
+		removeButton.setToolTipText("Remove Member");
+		removeButton.addActionListener(this);
+		removeButton.setEnabled(false);
+		removeButton.setFont(font);
+		addButton = new JButton("Add");
+		addButton.setActionCommand(ADD_MEMBER);
+		addButton.setToolTipText("Add Member");
+		addButton.addActionListener(this);
+		addButton.setFont(font);
+		doneButton = new JButton("Done");
+		doneButton.setActionCommand(DONE);
+		doneButton.setToolTipText("Done");
+		doneButton.addActionListener(this);
+		doneButton.setFont(font);
+		
+		// Setup List
+		mList = new ArrayList<String>();
+		mList.add("Harry Seager");
+		mList.add("Jess Pattison");
+		mList.add("Anna Jackson");
+		mList.add("Tom Jenkins");
+		listModel = new DefaultListModel<String>();
+		for(String s:mList){
+			listModel.addElement(s);
+		}
+		currentMembersList = new JList<String>(listModel);
+		currentMembersList.setFont(font);
+		currentMembersList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+		currentMembersList.setLayoutOrientation(JList.VERTICAL);
+		//currentMembersList.setVisibleRowCount(-1); // No effect
+		currentMembersList.addListSelectionListener(this);
+		JScrollPane listScroller = new JScrollPane(currentMembersList);
+		listScroller.setPreferredSize(new Dimension(150, 150));
+		
+		// Setup Combo Box
+		aList = new ArrayList<String>();
+		aList.add("Jordan Kluckow");
+		aList.add("Jamie Smith");
+		aList.add("Mike Abbott");
+		aList.add("Matt Ryan");
+		
+		addList = new JComboBox(aList.toArray());
+		addList.setEditable(true);
+		addList.addActionListener(this);
+		addList.setFont(font);
+
+		// Setup Individual Grid Cells
+		
+		c.gridx = 0;
+		c.gridy = 0;
+		c.anchor = GridBagConstraints.PAGE_START;
+		main.add(currentMembersLabel, c);
+		
+		c.gridx = 1;
+		c.gridy = 0;
+		c.insets = new Insets(0,10,0,0); // 20 Pixels in column
+		main.add(listScroller, c);
+		
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.gridx = 1;
+		c.gridy = 1;
+		c.insets = new Insets(0,10,0,0);
+		main.add(removeButton, c);
+		
+		c.gridx = 0;
+		c.gridy = 2;
+		c.anchor = GridBagConstraints.LINE_END;
+		c.insets = new Insets(10,0,0,0);
+		main.add(addMemberLabel, c);
+		
+		c.gridx = 1;
+		c.gridy = 2;
+		c.insets = new Insets(10,10,0,0);
+		main.add(addList, c);
+		
+		c.gridx = 2;
+		c.gridy = 2;
+		main.add(addButton, c);
+		
+		//c.fill = GridBagConstraints.NONE;
+		c.gridx = 1;
+		c.gridy = 3;
+		main.add(doneButton, c);
+		
+		add(main);
+		setVisible(true); // Make Frame Visible
+	}
+	
+	/**
+	 * Once a selection is made the below method is fired
+	 */
+	
+	@Override
+	public void valueChanged(ListSelectionEvent e) {
+	    if (e.getValueIsAdjusting() == false) {
+
+	        if (currentMembersList.getSelectedIndex() == -1) {
+	        //No selection, disable remove button.
+	            removeButton.setEnabled(false);
+
+	        } else {
+	        //Selection, enable the remove button.
+	        	removeButton.setEnabled(true);
+	        }
+	    }
+	}
+
+	@Override
+	public void actionPerformed(ActionEvent e) {
+		String cmd = e.getActionCommand();
+		
+		switch(cmd){
+		case ADD_MEMBER:
+			String name = (String) addList.getSelectedItem();
+			mList.add(name);
+			listModel.addElement(name);
+			// Add code for add member
+			break;
+		case REMOVE_MEMBER:
+			int index = currentMembersList.getSelectedIndex();
+			listModel.remove(index);
+			if(listModel.getSize() == 0){ // No members left
+				// What to do if no members left?
+			}else{
+				if (index == listModel.getSize()) {
+		            //removed item in last position
+		            index--;
+		        }
+				currentMembersList.setSelectedIndex(index);
+				currentMembersList.ensureIndexIsVisible(index);
+			}
+			// Add code for remove member
+			break;
+		case DONE:
+			setVisible(false);
+		    dispose();
+		}
+	}
+
+	@Override
+	public void update(Observable arg0, Object arg1) {
+		
+	}
+	
+	public static void main(String[] args) {
+		InviteRemoveGUI test = new InviteRemoveGUI();
+	}
+
+
+
+}

@@ -1,0 +1,163 @@
+package client.gui;
+import java.awt.BorderLayout;
+import java.awt.FlowLayout;
+import java.awt.Font;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
+import java.util.Observable;
+import java.util.Observer;
+
+import javax.imageio.ImageIO;
+import javax.swing.BorderFactory;
+import javax.swing.BoxLayout;
+import javax.swing.ImageIcon;
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JPasswordField;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
+import javax.swing.JTextField;
+import javax.swing.UIManager;
+import javax.swing.UnsupportedLookAndFeelException;
+
+import client.Client;
+
+
+public class ChatGUI extends JFrame implements Observer, ActionListener {
+	
+	/**
+	 * Serial Version
+	 */
+	private static final long serialVersionUID = 1L;
+
+	// Add Observable Class
+	private Client client; // Declare Client (Backend)
+	
+	// Set up Fonts
+	Font font = new Font("Calibri", Font.BOLD, 16);
+	
+	// Setup Main Frame
+	JPanel main = new JPanel();
+	
+	// Set up Row 1 - Picture
+	JPanel row1 = new JPanel();
+	BufferedImage logo = null; // Declare Logo
+	
+	// Setup Row 2 - Message History
+	JPanel row2 = new JPanel();
+	JTextArea mainText = new JTextArea(15, 35);
+	
+	// Setup Row 3 - Send new Message
+	JPanel row3 = new JPanel();
+	JTextArea sendText = new JTextArea(6, 30);
+	JButton sendMessage = new JButton("Send");
+	
+	
+	/**
+	 * Constructor for GUI
+	 * @param client - Backend driving the output
+	 */
+	
+	public ChatGUI(Client client) {
+		super("DevChat"); // Create new Frame with title
+		this.client = client; // Integrate GUI with backend
+		client.addObserver(this); // Setup observer with observable
+		//setLookAndFeel(); // Call setLookAndFeel method to change to Nimbus
+		setSize(500, 560); // Set Size
+		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE); // Close Operation
+		//GridLayout layout = new GridLayout(3, 1, 20, 20); // Create GridLayout 4x1
+		BoxLayout box = new BoxLayout(main, BoxLayout.Y_AXIS);
+		main.setLayout(box); // Set Layout
+		
+		// Setup Row 1 - Logo
+		row1.setLayout(new BorderLayout()); // Allows logo to be placed far left
+		row1.setBorder(BorderFactory.createEmptyBorder(5,5,0,0)); // Adds 5 pixels to left
+		try { // Must catch IOException
+			logo = ImageIO.read(new File("devchatlogosmall.png"));
+		}catch (IOException e){}
+		JLabel picLabel = new JLabel(new ImageIcon(logo));
+		row1.add(picLabel, BorderLayout.WEST); // Set logo to left
+		main.add(row1); // Add row to Main Frame
+		
+		// Setup Row 2 - Message History
+			mainText.setEditable(false);
+			row2.add(mainText);
+			mainText.setLineWrap(true);
+			mainText.setWrapStyleWord(true);
+			mainText.setFont(font);
+			// Add Scroll Pane with no sliders
+			JScrollPane scroll = new JScrollPane(mainText,
+					JScrollPane.VERTICAL_SCROLLBAR_ALWAYS,
+					JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+			row2.add(scroll); // Add components to panel
+			main.add(row2); // Add Panel to Frame
+				
+		// Setup Row 3 - Send Message
+			row3.setLayout(new FlowLayout());
+			row3.setBorder(BorderFactory.createEmptyBorder(0,1,0,0));
+			row3.add(sendText); // Add Send Textbox
+			sendText.setLineWrap(true);
+			sendText.setWrapStyleWord(true);
+			sendText.setFont(font);
+			// Add Scroll Pane with no sliders
+			JScrollPane scroll2 = new JScrollPane(sendText,
+					JScrollPane.VERTICAL_SCROLLBAR_ALWAYS,
+					JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+			row3.add(scroll2); // Add components to panel
+			row3.add(sendMessage); // Add Send Message Button
+			main.add(row3); // Add Panel to Frame
+				
+		// Add Action Listeners
+			sendMessage.addActionListener(this); // Send Button Action
+		
+		add(main); // Add main frame
+		
+		setVisible(true); // Make Frame Visible
+	}
+	
+	/**
+	 * Set look and feel to Nimbus - Looks much nicer!
+	 */
+
+	private void setLookAndFeel() {
+		try {
+			UIManager.setLookAndFeel("com.sun.java.swing.plaf.nimbus.NimbusLookAndFeel");
+		} catch (ClassNotFoundException | InstantiationException
+				| IllegalAccessException | UnsupportedLookAndFeelException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
+	/**
+	 * Execute instance methods in Model dependent upon which button has been clicked
+	 */
+	
+	@Override
+	public void actionPerformed(ActionEvent arg0) {
+		client.sendMessage(message, chatId);
+	}
+
+	/**
+	 * Method called when the observable object changes (in this case when text output changes)
+	 */
+
+	@Override
+	public void update(Observable o, Object arg) {
+	//	if (o instanceof Model) {
+            mainText.setText("" + arg); // "" Sets the arg to string type
+     //   }
+		
+	}
+	
+	public static void main(String[] args) {
+		Client client = new Client();
+		ChatGUI test = new ChatGUI(client); // Start GUI
+	}
+
+}

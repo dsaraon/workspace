@@ -1,0 +1,326 @@
+package client;
+
+import general.Account;
+
+import java.awt.BorderLayout;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.GridLayout;
+import java.awt.Insets;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.FocusEvent;
+import java.awt.event.FocusListener;
+import java.util.Observable;
+import java.util.Observer;
+
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JPasswordField;
+import javax.swing.JTextField;
+
+public class ViewProfileGUI extends JFrame implements Observer, ActionListener {
+	
+	/**
+	 * Serial Version
+	 */
+	private static final long serialVersionUID = 1L;
+	
+	static final private String START_CHAT = "startChat";
+	static final private String BACK = "back";
+	
+	private Client client; 
+	
+
+	private JButton chatButton;
+	private JButton backButton;
+	private JTextField username;
+	private JTextField email;
+	private JTextField firstName;
+	private JTextField lastName;
+	private JTextField languages;
+	private JTextField location;
+	private JTextField company;
+	private JTextField jobTitle;
+	private JTextField website;
+	private JTextField personalInfo;
+	private Account account;
+	private boolean canChat;
+	
+
+	public ViewProfileGUI(Account account, boolean canChat, Client client) {
+		
+		
+		super("View Profile"); 
+		setSize(350, 450); 
+		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE); 
+		//setResizable(false);
+		JPanel row1 = new JPanel();
+		JPanel main = new JPanel(); 
+		JPanel row2 = new JPanel(); 
+		Font font = new Font("Calibri", Font.BOLD, 14); 
+		
+		this.client = client; 
+		client.addObserver(this);
+		
+		this.canChat = canChat;
+		this.account = account;
+		// Setup Components
+		this.setLayout(new BorderLayout());
+		main.setLayout(new GridBagLayout());
+		GridBagConstraints c = new GridBagConstraints();
+		
+		// Labels
+		JLabel accountInfo  = new JLabel("<HTML><U>Account Info.</U></HTML>", JLabel.RIGHT);
+		JLabel personalInfoLabel  = new JLabel("<HTML><U>Personal Info.</U></HTML>", JLabel.RIGHT);
+		JLabel userNameLabel = new JLabel("User Name:", JLabel.RIGHT);
+		JLabel emailLabel = new JLabel("E-mail:", JLabel.RIGHT);
+		JLabel firstNameLabel = new JLabel("First Name:", JLabel.RIGHT);
+		JLabel lastNameLabel = new JLabel("Last Name:", JLabel.RIGHT);
+		JLabel languagesLabel = new JLabel("Languages:", JLabel.RIGHT);
+		JLabel locationLabel = new JLabel("Location:", JLabel.RIGHT);
+		JLabel companyLabel = new JLabel("Company Name:", JLabel.RIGHT);
+		JLabel jobTitleLabel = new JLabel("Job Title:", JLabel.RIGHT);
+		JLabel websiteLabel = new JLabel("Website:", JLabel.RIGHT);
+		JLabel personalInfo2Label = new JLabel("Personal Info.:", JLabel.RIGHT);
+		userNameLabel.setFont(font);
+		accountInfo.setFont(font);
+		personalInfoLabel.setFont(font);
+		emailLabel.setFont(font);
+		firstNameLabel.setFont(font);
+		lastNameLabel.setFont(font);
+		languagesLabel.setFont(font);
+		locationLabel.setFont(font);
+		companyLabel.setFont(font);
+		jobTitleLabel.setFont(font);
+		websiteLabel.setFont(font);
+		personalInfo2Label.setFont(font);
+		
+		// Picture
+		row1.add(Help.createPicture("personicon.png"), BorderLayout.NORTH); 
+		
+		// Buttons 2
+		chatButton = new JButton("Start Chat");
+		chatButton.setActionCommand(START_CHAT);
+		chatButton.setToolTipText("Start Chat");
+		chatButton.addActionListener(this);
+		chatButton.setFont(font);
+		backButton = new JButton("Back");
+		backButton.setActionCommand(BACK);
+		backButton.setToolTipText("Go Back");
+		backButton.addActionListener(this);
+		backButton.setFont(font);
+		
+		chatButton.setEnabled(canChat);
+		
+		
+		// Text Entry
+		username = new JTextField(15);
+		email = new JTextField(15);
+		firstName = new JTextField(15);
+		lastName = new JTextField(15);
+		languages = new JTextField(15);
+		location = new JTextField(15);
+		company = new JTextField(15);
+		jobTitle = new JTextField(15);
+		website = new JTextField(15);
+		personalInfo = new JTextField(15);
+		username.setEditable(false);
+		email.setEditable(false);
+		email.setEditable(false);
+		firstName.setEditable(false);
+		lastName.setEditable(false);
+		languages.setEditable(false);
+		location.setEditable(false);
+		company.setEditable(false);
+		jobTitle.setEditable(false);
+		website.setEditable(false);
+		personalInfo.setEditable(false);
+		
+		username.setText(account.getUsername());
+		email.setText(account.getEmail());
+		firstName.setText(account.getFirstname()); 
+		lastName.setText(account.getLastname());
+		languages.setText(account.getLanguages());
+		location.setText(account.getLocation());
+		company.setText(account.getCompany());
+		jobTitle.setText(account.getJobTitle());
+		website.setText(account.getWebsite());
+		personalInfo.setText(account.getPersonalInfo());
+
+		// Setup Individual Grid Cells
+		//c.insets = new Insets(0,10,0,0); // 20 Pixels in column
+		//c.anchor = GridBagConstraints.LINE_END;
+		//c.fill = GridBagConstraints.HORIZONTAL;
+		//c.anchor = GridBagConstraints.PAGE_START;
+		
+		// Adding Labels
+		c.gridx = 0;
+		c.gridy = 0;
+		//c.insets = new Insets(10,0,0,0);
+		c.anchor = GridBagConstraints.PAGE_START;
+		main.add(accountInfo, c);
+		
+		c.gridx = 0;
+		c.gridy = 1;
+		c.anchor = GridBagConstraints.LINE_END;
+		main.add(userNameLabel, c);
+		
+//		c.gridx = 0;
+//		c.gridy = 2;
+//		c.anchor = GridBagConstraints.LINE_END;
+//		main.add(passwordLabel, c);
+		
+		c.gridx = 0;
+		c.gridy = 3;
+		c.anchor = GridBagConstraints.LINE_END;
+		main.add(emailLabel, c);
+		
+		c.gridx = 0;
+		c.gridy = 4;
+		c.anchor = GridBagConstraints.LINE_END;
+		main.add(personalInfoLabel, c);
+		
+		c.gridx = 0;
+		c.gridy = 5;
+		c.anchor = GridBagConstraints.LINE_END;
+		main.add(firstNameLabel, c);
+		
+		c.gridx = 0;
+		c.gridy = 6;
+		c.anchor = GridBagConstraints.LINE_END;
+		main.add(lastNameLabel, c);
+		
+		c.gridx = 0;
+		c.gridy = 7;
+		c.anchor = GridBagConstraints.LINE_END;
+		main.add(languagesLabel, c);
+		
+		c.gridx = 0;
+		c.gridy = 8;
+		c.anchor = GridBagConstraints.LINE_END;
+		main.add(locationLabel, c);
+		
+		c.gridx = 0;
+		c.gridy = 9;
+		c.anchor = GridBagConstraints.LINE_END;
+		main.add(companyLabel, c);
+		
+		c.gridx = 0;
+		c.gridy = 10;
+		c.anchor = GridBagConstraints.LINE_END;
+		main.add(jobTitleLabel, c);
+		
+		c.gridx = 0;
+		c.gridy = 11;
+		c.anchor = GridBagConstraints.LINE_END;
+		main.add(websiteLabel, c);
+		
+		c.gridx = 0;
+		c.gridy = 12;
+		c.anchor = GridBagConstraints.FIRST_LINE_END;
+		main.add(personalInfo2Label, c);
+		
+		// Adding Text Fields
+		c.gridx = 1;
+		c.gridy = 1;
+		c.insets = new Insets(0,10,0,0);
+		c.anchor = GridBagConstraints.LINE_START;
+		main.add(username, c);
+		
+//		c.gridx = 1;
+//		c.gridy = 2;
+//		c.insets = new Insets(0,10,0,0);
+//		c.anchor = GridBagConstraints.LINE_START;
+//		main.add(password, c);
+		
+		c.gridx = 1;
+		c.gridy = 3;
+		c.insets = new Insets(0,10,0,0);
+		c.anchor = GridBagConstraints.LINE_START;
+		main.add(email, c);
+		
+		c.gridx = 1;
+		c.gridy = 5;
+		c.insets = new Insets(0,10,0,0);
+		c.anchor = GridBagConstraints.LINE_START;
+		main.add(firstName, c);
+		
+		c.gridx = 1;
+		c.gridy = 6;
+		c.insets = new Insets(0,10,0,0);
+		c.anchor = GridBagConstraints.LINE_START;
+		main.add(lastName, c);
+		
+		c.gridx = 1;
+		c.gridy = 7;
+		c.insets = new Insets(0,10,0,0);
+		c.anchor = GridBagConstraints.LINE_START;
+		main.add(languages, c);
+		
+		c.gridx = 1;
+		c.gridy = 8;
+		c.insets = new Insets(0,10,0,0);
+		c.anchor = GridBagConstraints.LINE_START;
+		main.add(location, c);
+		
+		c.gridx = 1;
+		c.gridy = 9;
+		c.insets = new Insets(0,10,0,0);
+		c.anchor = GridBagConstraints.LINE_START;
+		main.add(company, c);
+		
+		c.gridx = 1;
+		c.gridy = 10;
+		c.insets = new Insets(0,10,0,0);
+		c.anchor = GridBagConstraints.LINE_START;
+		main.add(jobTitle, c);
+		
+		c.gridx = 1;
+		c.gridy = 11;
+		c.insets = new Insets(0,10,0,0);
+		c.anchor = GridBagConstraints.LINE_START;
+		main.add(website, c);
+		
+		c.gridx = 1;
+		c.gridy = 12;
+		c.insets = new Insets(0,10,0,0);
+		c.anchor = GridBagConstraints.FIRST_LINE_START;
+		main.add(personalInfo, c);
+		
+		// Add Buttons
+		row2.add(chatButton);
+		row2.add(backButton);
+		
+		add(row1, BorderLayout.NORTH);
+		add(main, BorderLayout.CENTER);
+		add(row2, BorderLayout.SOUTH);
+		setVisible(true);
+	}
+
+	@Override
+	public void actionPerformed(ActionEvent e) {
+		String cmd = e.getActionCommand();
+		
+		switch(cmd){
+		case START_CHAT:
+			client.startPrivateChat(account.getUsername());
+			break;
+		case BACK:
+			dispose();
+		    break;
+		}
+	}
+
+	@Override
+	public void update(Observable o, Object arg) {
+		// TODO Auto-generated method stub
+		
+	}
+
+}

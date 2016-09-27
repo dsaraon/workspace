@@ -1,0 +1,55 @@
+package client;
+
+import java.util.Observable;
+import java.util.Observer;
+
+//This should be the main View class 
+//Initially singly-threaded
+
+public class View extends Thread implements Observer{
+	
+	//What field variables does it need?
+	private Client client;
+	
+	//add GUI field variables
+	
+	/**
+	 * Constructor
+	 * @param client
+	 */
+	public View(Client client){
+		this.client = client;
+	}
+	
+	/**
+	 * thread - IMPLEMENT!
+	 */
+	public void run(){
+		
+	}
+	
+	@Override
+	public void update(Observable o, Object arg) {
+		// TODO Auto-generated method stub
+		
+		
+		//add logout feature 
+		
+		//add how to switch between different GUIs or 
+		//will the GUI's call each other and pass the client as parameter? 
+		
+	}
+
+	
+	//main method to run the GUI
+	public static void main(String args[]){
+		
+		//who provides the Client hostname and port ? 
+		Client newClient = new Client(null, 8888);
+		
+		View viewMain = new View(newClient);
+		viewMain.start();
+	}
+
+		
+}
